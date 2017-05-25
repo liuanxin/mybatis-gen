@@ -3,11 +3,13 @@
 
   定义好表结构后, 生成 mybatis 的相关的 model repository xml 代码
 
-** 使用
 
-  设置 generator/src/main/resources 目录中的两个文件.\\
-  generator.properties 设置连接数据库的相关参数和存放目录及包名等.\\
-  generatorConfig.xml 设置最下面的 table 部分.\\
-    如果想生成某个数据库的全部表, 运行 SqlGenTest 即可(在 var.properties 设置数据库相关配置).
+** 使用
+#+BEGIN_QUOTE
+  设置 generator/src/main/resources 目录中的两个文件.
+  generator.properties 设置连接数据库的相关参数和存放目录及包名等.
+  generatorConfig.xml 设置最下面的 table 部分.
+  如果想生成某个数据库的全部表, 运行 SqlGenTest 即可(在 var.properties 设置数据库相关配置).
 
   运行 mvn clean compile 将会生成对应的源码
+#+END_QUOTE
