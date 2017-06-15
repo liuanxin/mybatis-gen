@@ -54,7 +54,7 @@ public class CustomModelCommentPlugin extends PluginAdapter {
         topLevelClass.addJavaDocLine("/** " + comment + " --> " + table.getIntrospectedTableName() + " */");
 
         List<Field> fields = topLevelClass.getFields();
-        Map<String, Field> map = new HashMap<>();
+        Map<String, Field> map = new HashMap<String, Field>();
         for (Field field : fields) {
             map.put(field.getName(), field);
         }
