@@ -41,7 +41,7 @@
         -->
 
         <!-- 生成的实体类 -->
-        <javaModelGenerator targetPackage="${parentPackage}/model" targetProject="${targetPath}/java">
+        <javaModelGenerator targetPackage="${parentPackage}.model" targetProject="${targetPath}/java">
             <property name="enableSubPackages" value="true"/>
         </javaModelGenerator>
 
@@ -50,7 +50,7 @@
 
         <!-- 生成 repository 接口和 xml 实现. 用 ognl 函数判断对象是否为空. @Ognl@isNotEmpty -->
         <javaClientGenerator type="com.github.mte.mybatis.code.CustomJavaMapperGenerator"
-                targetPackage="${parentPackage}/repository" targetProject="${targetPath}/java">
+                targetPackage="${parentPackage}.repository" targetProject="${targetPath}/java">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
         <!-- 用这个是产生 属性 != null 的
