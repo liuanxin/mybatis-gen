@@ -73,7 +73,8 @@ public class SetGetPlugin extends PluginAdapter {
                                                                  Interface interfaze,
                                                                  IntrospectedTable introspectedTable) {
         // 导入分页类
-        FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.mte.page.model.Page");
+        // FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.mte.page.model.Page");
+        FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.miemiedev.mybatis.paginator.domain.PageBounds");
         interfaze.addImportedType(pageType);
 
         // 加入分页方法
