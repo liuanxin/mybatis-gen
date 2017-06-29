@@ -8,9 +8,9 @@
 
 ** 使用
 
-  设置 test 模块中的 ~var.properties~ 文件内容, 配置成要生成代码的相关数据库连接信息, 运行 ~com.github.mte.SqlGenTest~ 类
+  设置 ~var.properties~ 文件内容, 配置成要生成代码的相关数据库连接信息并运行 ~com.github.mte.SqlGenTest~ 类
 
-  将上面测试类生成的下面的配置复制到 ~generatorConfig.xml~ 文件的最底下
+  将上面测试类生成的 xml 复制到 ~generatorConfig.xml~ 文件的最底下
   
 #+BEGIN_SRC xml
 <table tableName="t_config" domainObjectName="Config" escapeWildcards="true"
