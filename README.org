@@ -13,15 +13,15 @@
 
 ** 使用
 
-+ 设置 ~var.properties~ 文件内容, 配置成要生成代码的相关数据库连接信息
-+ 运行 ~com.github.mte.SqlGenTest~ 类. 测试类将会输出类似下面的 xml
++  设置 ~var.properties~ 文件内容, 配置成要生成代码的相关数据库连接信息  
++  运行 ~com.github.mte.SqlGenTest~ 类. 测试类将会输出类似下面的 xml
 #+BEGIN_SRC xml
 <table tableName="t_config" domainObjectName="Config" escapeWildcards="true"
 		 enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true"
 		 enableSelectByExample="true" delimitIdentifiers="true" delimitAllColumns="true"/>
 #+END_SRC
 
-+ 将需要生成代码的相关配置复制到 ~generatorConfig.xml~ 文件的最底下
-+ 设置 ~generator.properties~ 文件, 修改数据库配置包名等
++  将需要生成代码的相关配置复制到 ~generatorConfig.xml~ 文件的最底下
++  设置 ~generator.properties~ 文件, 修改数据库配置包名等
 
-+ 运行 ~mvn clean compile~ 生成源码
+运行 ~mvn clean compile~ 生成源码
