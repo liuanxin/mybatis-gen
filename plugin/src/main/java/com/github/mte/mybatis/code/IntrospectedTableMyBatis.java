@@ -38,7 +38,7 @@ public class IntrospectedTableMyBatis extends IntrospectedTableMyBatis3Impl {
             customDocument.setRootElement(myElement);
 
             GeneratedXmlFile custom = new GeneratedXmlFile(customDocument,
-                    customFileName(xmlFileName), NEW_XML_DIR, targetProject, true, formatter);
+                    customFileName(xmlFileName), mapperPackage + "_" + NEW_XML_DIR, targetProject, true, formatter);
             if (context.getPlugins().sqlMapGenerated(custom, this)) {
                 answer.add(custom);
             }
