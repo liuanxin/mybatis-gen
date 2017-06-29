@@ -25,6 +25,6 @@
 
   将需要生成代码的相关配置复制到 ~generatorConfig.xml~ 文件的最底下
 
-  设置 generator.properties 文件, 修改数据库配置, 包名, 等.
+  设置 ~generator.properties~ 文件, 修改数据库配置, 包名, 等.
   
   运行 ~mvn clean compile~ 生成源码
