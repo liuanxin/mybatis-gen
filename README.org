@@ -1,17 +1,27 @@
 
-** mybatis 代码生成
+** 说明
 
-  定义好表结构后, 生成 mybatis 的相关的 model repository xml 代码
+  本插件基于 mybatis generator 生成. 在原有的基础上生成了一些额外的东西(如新生成一个空的 xml 实现), 去掉了一些东西(如实体类的 set get)
+
+: 一共会生成 5 个文件
+: model      : 跟数据库表关联的对象
+: example    : 操作数据库的 example 对象, 跟上面的平级
+: repository : 接口文件
+: xml        : 自动生成的 xml 文件(sql 语句), 主要是上面接口文件的实现
+: custom xml : 一个空的 xml 文件, 主要用来添加项目后期自己编写的 sql
 
 
 ** 使用
-#+BEGIN_QUOTE
-设置 generator/src/main/resources 目录中的两个文件.
 
-generator.properties 设置连接数据库的相关参数和存放目录及包名等.
++  设置 ~var.properties~ 文件内容, 配置成要生成代码的相关数据库连接信息  
++  运行 ~com.github.mte.SqlGenTest~ 类. 测试类将会输出类似下面的 xml
+#+BEGIN_SRC xml
+<table tableName="t_config" domainObjectName="Config" escapeWildcards="true"
+		 enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true"
+		 enableSelectByExample="true" delimitIdentifiers="true" delimitAllColumns="true"/>
+#+END_SRC
 
-generatorConfig.xml 设置最下面的 table 部分.
-如果想生成某个数据库的全部表, 运行 SqlGenTest 即可(在 var.properties 设置数据库相关配置).
++  将需要生成代码的相关配置复制到 ~generatorConfig.xml~ 文件的最底下
++  设置 ~generator.properties~ 文件, 修改数据库配置包名等
 
-运行 mvn clean compile 将会生成对应的源码
-#+END_QUOTE
+运行 ~mvn clean compile~ 生成源码
