@@ -20,14 +20,10 @@ public class InsertSelectiveElementGenerator extends AbstractXmlElementGenerator
     public void addElements(XmlElement parentElement) {
         XmlElement answer = new XmlElement("insert"); //$NON-NLS-1$
 
-        answer.addAttribute(new Attribute(
-                "id", introspectedTable.getInsertSelectiveStatementId())); //$NON-NLS-1$
+        answer.addAttribute(new Attribute("id", introspectedTable.getInsertSelectiveStatementId())); //$NON-NLS-1$
 
-        FullyQualifiedJavaType parameterType = introspectedTable.getRules()
-                .calculateAllFieldsClass();
-
-        answer.addAttribute(new Attribute("parameterType", //$NON-NLS-1$
-                parameterType.getFullyQualifiedName()));
+        FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
+        answer.addAttribute(new Attribute("parameterType", parameterType.getFullyQualifiedName()));
 
         context.getCommentGenerator().addComment(answer);
 
@@ -65,8 +61,7 @@ public class InsertSelectiveElementGenerator extends AbstractXmlElementGenerator
         valuesTrimElement.addAttribute(new Attribute("suffixOverrides", ",")); //$NON-NLS-1$ //$NON-NLS-2$
         answer.addElement(valuesTrimElement);
 
-        for (IntrospectedColumn introspectedColumn : introspectedTable
-                .getAllColumns()) {
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
             if (introspectedColumn.isIdentity()) {
                 // cannot set values on identity fields
                 continue;
@@ -80,14 +75,12 @@ public class InsertSelectiveElementGenerator extends AbstractXmlElementGenerator
 
                 // if it is primitive, we cannot do a null check
                 sb.setLength(0);
-                sb.append(MyBatis3FormattingUtilities
-                        .getEscapedColumnName(introspectedColumn));
+                sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
                 sb.append(',');
                 insertTrimElement.addElement(new TextElement(sb.toString()));
 
                 sb.setLength(0);
-                sb.append(MyBatis3FormattingUtilities
-                        .getParameterClause(introspectedColumn));
+                sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
                 sb.append(',');
                 valuesTrimElement.addElement(new TextElement(sb.toString()));
 

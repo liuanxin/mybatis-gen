@@ -20,7 +20,6 @@ public class UpdateByPrimaryKeySelectiveElementGenerator extends AbstractXmlElem
         answer.addAttribute(new Attribute("id", introspectedTable.getUpdateByPrimaryKeySelectiveStatementId())); //$NON-NLS-1$
 
         String parameterType;
-
         if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
             parameterType = introspectedTable.getRecordWithBLOBsType();
         } else {
@@ -28,11 +27,9 @@ public class UpdateByPrimaryKeySelectiveElementGenerator extends AbstractXmlElem
         }
 
         answer.addAttribute(new Attribute("parameterType", parameterType));
-
         context.getCommentGenerator().addComment(answer);
 
         StringBuilder sb = new StringBuilder();
-
         sb.append("update "); //$NON-NLS-1$
         sb.append(introspectedTable.getFullyQualifiedTableNameAtRuntime());
         answer.addElement(new TextElement(sb.toString()));
