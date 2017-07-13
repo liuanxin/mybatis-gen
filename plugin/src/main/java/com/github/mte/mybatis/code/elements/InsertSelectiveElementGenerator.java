@@ -11,6 +11,7 @@ import org.mybatis.generator.config.GeneratedKey;
 
 /** 加入自己的逻辑判断元素是否为空. 也就是这里使用 ognl 方法调用 */
 public class InsertSelectiveElementGenerator extends AbstractXmlElementGenerator {
+
     public InsertSelectiveElementGenerator() {
         super();
     }
@@ -94,42 +95,32 @@ public class InsertSelectiveElementGenerator extends AbstractXmlElementGenerator
             }
 
             XmlElement insertNotNullElement = new XmlElement("if"); //$NON-NLS-1$
-            //@Ognl@isNotEmpty(employeeName)
             sb.setLength(0);
-            //sb.append(introspectedColumn.getJavaProperty());
-            //sb.append(" != null"); //$NON-NLS-1$
-            sb.append("@Ognl@isNotEmpty(").append(introspectedColumn.getJavaProperty()).append(")");
-
-            insertNotNullElement.addAttribute(new Attribute(
-                    "test", sb.toString())); //$NON-NLS-1$
+            // sb.append("@Ognl@isNotEmpty(").append(introspectedColumn.getJavaProperty()).append(")");
+            sb.append(introspectedColumn.getJavaProperty()).append(" != null"); //$NON-NLS-1$
+            insertNotNullElement.addAttribute(new Attribute("test", sb.toString())); //$NON-NLS-1$
 
             sb.setLength(0);
-            sb.append(MyBatis3FormattingUtilities
-                    .getEscapedColumnName(introspectedColumn));
+            sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
             sb.append(',');
             insertNotNullElement.addElement(new TextElement(sb.toString()));
             insertTrimElement.addElement(insertNotNullElement);
 
             XmlElement valuesNotNullElement = new XmlElement("if"); //$NON-NLS-1$
             sb.setLength(0);
-            //@Ognl@isNotEmpty(employeeName)
-            //sb.append(introspectedColumn.getJavaProperty());
-            //sb.append(" != null"); //$NON-NLS-1$
-            sb.append("@Ognl@isNotEmpty(").append(introspectedColumn.getJavaProperty()).append(")");
+            // sb.append("@Ognl@isNotEmpty(").append(introspectedColumn.getJavaProperty()).append(")");
+            sb.append(introspectedColumn.getJavaProperty()).append(" != null"); //$NON-NLS-1$
 
-            valuesNotNullElement.addAttribute(new Attribute(
-                    "test", sb.toString())); //$NON-NLS-1$
+            valuesNotNullElement.addAttribute(new Attribute("test", sb.toString())); //$NON-NLS-1$
 
             sb.setLength(0);
-            sb.append(MyBatis3FormattingUtilities
-                    .getParameterClause(introspectedColumn));
+            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
             sb.append(',');
             valuesNotNullElement.addElement(new TextElement(sb.toString()));
             valuesTrimElement.addElement(valuesNotNullElement);
         }
 
-        if (context.getPlugins().sqlMapInsertSelectiveElementGenerated(
-                answer, introspectedTable)) {
+        if (context.getPlugins().sqlMapInsertSelectiveElementGenerated(answer, introspectedTable)) {
             parentElement.addElement(answer);
         }
     }

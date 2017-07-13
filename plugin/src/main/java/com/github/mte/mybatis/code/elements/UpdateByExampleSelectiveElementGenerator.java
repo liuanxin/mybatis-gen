@@ -7,8 +7,7 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElementGenerator;
 
-public class UpdateByExampleSelectiveElementGenerator extends
-        AbstractXmlElementGenerator {
+public class UpdateByExampleSelectiveElementGenerator extends AbstractXmlElementGenerator {
 
     public UpdateByExampleSelectiveElementGenerator() {
         super();
@@ -33,24 +32,19 @@ public class UpdateByExampleSelectiveElementGenerator extends
         XmlElement dynamicElement = new XmlElement("set"); //$NON-NLS-1$
         answer.addElement(dynamicElement);
 
-        for (IntrospectedColumn introspectedColumn : introspectedTable
-                .getAllColumns()) {
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
             XmlElement isNotNullElement = new XmlElement("if"); //$NON-NLS-1$
             sb.setLength(0);
-            //@Ognl@isNotEmpty(employeeName)
-            //sb.append(introspectedColumn.getJavaProperty("record.")); //$NON-NLS-1$
-            //sb.append(" != null"); //$NON-NLS-1$
-            sb.append("@Ognl@isNotEmpty(").append(introspectedColumn.getJavaProperty("record.")).append(")");
+            // sb.append("@Ognl@isNotEmpty(").append(introspectedColumn.getJavaProperty("record.")).append(")");
+            sb.append(introspectedColumn.getJavaProperty("record.")).append(" != null"); //$NON-NLS-1$
 
             isNotNullElement.addAttribute(new Attribute("test", sb.toString())); //$NON-NLS-1$
             dynamicElement.addElement(isNotNullElement);
 
             sb.setLength(0);
-            sb.append(MyBatis3FormattingUtilities
-                    .getAliasedEscapedColumnName(introspectedColumn));
+            sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(introspectedColumn));
             sb.append(" = "); //$NON-NLS-1$
-            sb.append(MyBatis3FormattingUtilities.getParameterClause(
-                    introspectedColumn, "record.")); //$NON-NLS-1$
+            sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, "record.")); //$NON-NLS-1$
             sb.append(',');
 
             isNotNullElement.addElement(new TextElement(sb.toString()));
@@ -58,9 +52,7 @@ public class UpdateByExampleSelectiveElementGenerator extends
 
         answer.addElement(getUpdateByExampleIncludeElement());
 
-        if (context.getPlugins()
-                .sqlMapUpdateByExampleSelectiveElementGenerated(answer,
-                        introspectedTable)) {
+        if (context.getPlugins().sqlMapUpdateByExampleSelectiveElementGenerated(answer, introspectedTable)) {
             parentElement.addElement(answer);
         }
     }

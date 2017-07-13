@@ -12,7 +12,7 @@ import java.util.List;
 public class IntrospectedTableMyBatis extends IntrospectedTableMyBatis3Impl {
 
     /** 新加的空 xml 文件的目录名及文件名中的部分 */
-    private static final String NEW_XML_DIR = "custom";
+    private static final String NEW_XML_DIR = "-custom";
 
     @Override
     public List<GeneratedXmlFile> getGeneratedXmlFiles() {
@@ -38,7 +38,7 @@ public class IntrospectedTableMyBatis extends IntrospectedTableMyBatis3Impl {
             customDocument.setRootElement(myElement);
 
             GeneratedXmlFile custom = new GeneratedXmlFile(customDocument,
-                    customFileName(xmlFileName), mapperPackage + "_" + NEW_XML_DIR, targetProject, true, formatter);
+                    customFileName(xmlFileName), mapperPackage + NEW_XML_DIR, targetProject, true, formatter);
             if (context.getPlugins().sqlMapGenerated(custom, this)) {
                 answer.add(custom);
             }
@@ -48,6 +48,6 @@ public class IntrospectedTableMyBatis extends IntrospectedTableMyBatis3Impl {
 
     private String customFileName(String xml) {
         int last = xml.lastIndexOf(".");
-        return xml.substring(0, last) + "_" + NEW_XML_DIR + xml.substring(last);
+        return xml.substring(0, last) + NEW_XML_DIR + xml.substring(last);
     }
 }
