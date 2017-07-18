@@ -1,6 +1,5 @@
 package com.github.liuanxin.mybatis.plugin;
 
-import com.google.common.base.CaseFormat;
 import org.mybatis.generator.api.FullyQualifiedTable;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -40,6 +39,7 @@ public class CustomModelCommentPlugin extends PluginAdapter {
 
     private void generateToString(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         FullyQualifiedTable table = introspectedTable.getFullyQualifiedTable();
+
         // 类注释(对应的表注释)
         String comment = table.getRemarks();
         if (comment == null || comment.trim().length() == 0) comment = "no comment on table";
@@ -49,7 +49,7 @@ public class CustomModelCommentPlugin extends PluginAdapter {
         topLevelClass.addJavaDocLine(" * " + comment + " --> " + table.getIntrospectedTableName());
         topLevelClass.addJavaDocLine(" *");
         topLevelClass.addJavaDocLine(" * Generate on " + new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-        topLevelClass.addJavaDocLine(" *//*");
+        topLevelClass.addJavaDocLine(" * /");
         */
         topLevelClass.addJavaDocLine("/** " + comment + " --> " + table.getIntrospectedTableName() + " */");
 
@@ -64,19 +64,17 @@ public class CustomModelCommentPlugin extends PluginAdapter {
             if (f != null) {
                 f.getJavaDocLines().clear();
                 String remarks = column.getRemarks();
+                String columnName = column.getActualColumnName();
+                if ("java.util.Date".equalsIgnoreCase(column.getFullyQualifiedJavaType().toString())) {
+                    String propertyName = underlineToCamel(columnName);
+                    f.addJavaDocLine(String.format("/** 为 \"%s\" 提供查询的起始值 */", columnName));
+                    f.addJavaDocLine(String.format("private Date %sStart;", propertyName));
+                    f.addJavaDocLine(String.format("/** 为 \"%s\" 提供查询的结束值 */", columnName));
+                    f.addJavaDocLine(String.format("private Date %sEnd;", propertyName));
+                }
                 if (remarks != null) {
                     remarks = remarks.trim();
                     if (remarks.length() > 0) {
-                        String columnName = column.getActualColumnName();
-                        if ("java.util.Date".equalsIgnoreCase(column.getFullyQualifiedJavaType().toString())) {
-                            String propertyName = CaseFormat.UPPER_UNDERSCORE
-                                    .converterTo(CaseFormat.LOWER_CAMEL)
-                                    .convert(columnName);
-                            f.addJavaDocLine(String.format("/** 为 \"%s\" 提供查询的起始值 */", remarks));
-                            f.addJavaDocLine(String.format("private Date %sStart;", propertyName));
-                            f.addJavaDocLine(String.format("/** 为 \"%s\" 提供查询的结束值 */", remarks));
-                            f.addJavaDocLine(String.format("private Date %sEnd;", propertyName));
-                        }
                         // 属性注释(对应的字段注释)
                         f.addJavaDocLine("/** " + remarks + " --> " + columnName + " */");
                     }
@@ -85,5 +83,24 @@ public class CustomModelCommentPlugin extends PluginAdapter {
         }
     }
 
+    /** 下划线 或 中横线 转 驼峰 */
+    private static String underlineToCamel(String param) {
+        if (param == null || "".equals(param.trim())) {
+            return "";
+        }
+        int len = param.length();
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++) {
+            char c = param.charAt(i);
+            if (c == '_' || c == '-') {
+                if (++i < len) {
+                    sb.append(Character.toUpperCase(param.charAt(i)));
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
 }
 
