@@ -10,6 +10,22 @@
 : xml        : 自动生成的 xml 文件(sql 语句), 主要是上面接口文件的实现
 : custom xml : 一个空的 xml 文件, 主要用来添加项目后期自己编写的 sql
 
+#+BEGIN_SRC
+<javaClientGenerator type="MAPPER" targetPackage="${xxx}" targetProject="${targetPath}/java">
+  <property name="enableSubPackages" value="true" />
+</javaClientGenerator>
+#+END_SRC
+
+上面的 type 有下面这四种生成方式
+: ANNOTATEDMAPPER > 全部生成 Java 代码, example 的 sql 会有一个 SqlProvider 来生成
+: MIXEDMAPPER > 一半 Java 代码, 一半 xml, 简单 sql 由注解生成, example 的 sql 由 xml 生成
+: XMLMAPPER > 生成 xml 实现
+: MAPPER > 生成 xml 实现, 跟 XMLMAPPER 一样
+
+添加了两种
+: ALIAS > 生成 xml 实现, 每个表会在 sql 和 result map 中多加一个别名, 供多表时使用
+: ALIASANDEMPTY > 除了上面的别名, 使用 Ognl 类的方法而不止是用 != 来进行比较
+
 
 ** 使用
 

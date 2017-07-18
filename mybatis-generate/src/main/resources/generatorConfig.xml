@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<!-- 这个文件主要用于基于 数据库 自动生成 model、repository、xml 文件的相关配置 -->
+<generatorConfiguration>
+    <properties resource="generator.properties"/>
+
+    <classPathEntry location="${driver}"/>
+
+    <!--
+    关于 targetRuntime >>
+        更新的时候使用 MyBatis3 避免覆盖 cust.xml
+        新表使用 IntrospectedTableMyBatis, 会多生成一个自定义的 xml.
+    -->
+    <context id="MySqlTables" targetRuntime="com.github.liuanxin.mybatis.code.IntrospectedTableMyBatis">
+        <!--定义 mysql 的转义符, 结合 table 标签的 delimitIdentifiers, delimitAllColumns 使用-->
+        <property name="beginningDelimiter" value="`"/>
+        <property name="endingDelimiter" value="`"/>
+
+        <!-- 序列化, 生成精简的 set get, 从表上获取注解 -->
+        <plugin type="com.github.liuanxin.mybatis.plugin.CustomSerializablePlugin"/>
+        <plugin type="com.github.liuanxin.mybatis.plugin.SetGetPlugin"/>
+        <plugin type="com.github.liuanxin.mybatis.plugin.CustomModelCommentPlugin"/>
+        <!-- 生成缓存, 目前只能在 xml 中有效, 在 mapper 上标注 @CacheNamespace(implementation = Cache.class) 是注解的使用方式 -->
+        <!--<plugin type="com.github.liuanxin.mybatis.plugin.CustomCachePlugin">
+            <property name="cache_type" value="org.mybatis.caches.redis.RedisCache"/>
+        </plugin>-->
+
+        <!-- 抑制 mybatis 生成的注释 -->
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"/>
+        </commentGenerator>
+
+        <jdbcConnection driverClass="${class}" connectionURL="${conn}" userId="${user}" password="${password}"/>
+
+        <!-- 生成的实体类 -->
+        <javaModelGenerator targetPackage="${parentPackage}.model" targetProject="${targetPath}/java">
+            <property name="enableSubPackages" value="true"/>
+        </javaModelGenerator>
+
+        <!-- 生成的 xml 配置 -->
+        <sqlMapGenerator targetPackage="${xmlDir}" targetProject="${targetPath}/resources"/>
+
+        <!-- 生成的 java 实现 -->
+        <javaClientGenerator type="ANNOTATEDMAPPER"
+                             targetPackage="${parentPackage}.repository"
+                             targetProject="${targetPath}/java">
+            <property name="enableSubPackages" value="true" />
+        </javaClientGenerator>
+
+
+        <table tableName="t_system_config" domainObjectName="SystemConfig" escapeWildcards="true"
+               enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true"
+               enableSelectByExample="true" delimitIdentifiers="true" delimitAllColumns="true"/>
+
+    </context>
+</generatorConfiguration>
