@@ -10,7 +10,7 @@
 : xml        : 自动生成的 xml 文件(sql 语句), 主要是上面接口文件的实现
 : custom xml : 一个空的 xml 文件, 主要用来添加项目后期自己编写的 sql
 
-#+BEGIN_SRC
+#+BEGIN_SRC xml
 <javaClientGenerator type="MAPPER" targetPackage="${xxx}" targetProject="${targetPath}/java">
   <property name="enableSubPackages" value="true" />
 </javaClientGenerator>
