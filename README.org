@@ -1,13 +1,14 @@
 
 ** 说明
 
-  本插件基于 mybatis generator 生成. 在原有的基础上生成了一些额外的东西(如新生成一个空的 xml 实现), 去掉了一些东西(如实体类的 set get)
+  本插件基于 mybatis generator 二次开发. 在原有的基础上生成了一些额外的东西(如新生成一个空的 xml 实现), 去掉了一些东西(如 model 的 set get 方法, 改由 lombok 生成)
 
-: 一共会生成 5 个文件
-: model      : 跟数据库表关联的对象
+: 一共会生成 5 个文件, 如果全注解(不生成 xml)的话, 将会生成 4 个文件(多一个 SqlProvider.java, 两个 xml 没有了)
+: model      : 跟数据库表关联的对象
 : example    : 操作数据库的 example 对象, 跟上面的平级
 : repository : 接口文件
-: xml        : 自动生成的 xml 文件(sql 语句), 主要是上面接口文件的实现
+: SqlProvider: 实现了 xml 的 example 功能, 如果全注解, 将不生成下面两个文件而会有这个文件
+: xml        : 自动生成的 xml 文件(sql 语句), 主要是上面接口文件的实现
 : custom xml : 一个空的 xml 文件, 主要用来添加项目后期自己编写的 sql
 
 #+BEGIN_SRC xml
