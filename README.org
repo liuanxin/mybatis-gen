@@ -87,6 +87,6 @@ where (name = 'xx' and create_time &lt; now)
    or (phone = 'xxx' and verify in (1, 2, 3))
 #+END_SRC
 
-如果要生成条件复杂的 or 语句(比如在一个 and 条件里面有好几个 or), exmple 将会无法实现, 此时就需要手写 sql 了
+如果要生成条件复杂的 or 语句(比如在一个 and 条件里面还有 or), exmple 将会无法实现, 此时就需要手写 sql 了
 
 
