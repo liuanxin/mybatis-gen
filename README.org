@@ -81,7 +81,10 @@ userMapper.selectByExample(userExample);
 
 生成的 sql 如下
 #+BEGIN_SRC sql
-select xx from `t_user` where (name = 'xx' and create_time &lt; now) or (email = 'xxx' and `cert` is not null) or (phone = 'xxx' and verify in (1, 2, 3))
+select xx from `t_user` 
+where (name = 'xx' and create_time &lt; now)
+   or (email = 'xxx' and `cert` is not null)
+   or (phone = 'xxx' and verify in (1, 2, 3))
 #+END_SRC
 
 如果要生成条件复杂的 or 语句(比如在一个 and 条件里面有好几个 or), exmple 将会无法实现, 此时就需要手写 sql 了
