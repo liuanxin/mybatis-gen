@@ -15,7 +15,6 @@
 运行 ~mvn clean compile~ 生成源码
 
 
-
 ** 说明
 
   本插件基于 mybatis generator 二次开发. 在原有的基础上生成了一些额外的东西(如新生成一个空的 xml 实现), 去掉了一些东西(如 model 的 set get 方法, 改由 lombok 生成)
@@ -43,3 +42,48 @@
 添加了两种(无视大小写)
 : alias > 生成 xml 实现, 每个表会在 sql 和 result map 中多加一个别名, 供多表时使用
 : aliasAndEmpty > 除了上面的别名, 使用 Ognl 类的方法而不止是用 != 来进行比较
+
+
+** 多用 example
+
+如果我们想要生成如下的 sql 语句:
+#+BEGIN_SRC sql
+select xxx from `t_user` where user_name = 'sz' and level > 1 and verify in (1, 2, 3)
+#+END_SRC
+
+这样构建  example 来达到上面的效果
+#+BEGIN_SRC java
+UserExample userExample = new UserExample();
+userExample.or().andUserNameEqualTo(phone).andLevelGreaterThan(1).andVerifyIn(Arrays.asList(1, 2, 3));
+userMapper.selectByExample(userExample);
+#+END_SRC
+
+同样的 where 条件也可以用在 update 和 delete 上
+#+BEGIN_SRC java
+UserExample userExample = new UserExample();
+userExample.or().andUserNameNameEqualTo(phone).andLevelGreaterThan(1).andVerifyIn(Arrays.asList(1, 2, 3));
+userMapper.updateByExampleSelective(new User().setPassword("abc"), userExample);
+#+END_SRC
+
+上面将会生成如下的 sql 语句
+#+BEGIN_SRC sql
+update `t_user` set password='abc' where user_name = 'sz' and level > 1 and verify in (1, 2, 3)
+#+END_SRC
+
+如果要生成 or 语句, 可以像这样
+#+BEGIN_SRC java
+UserExample userExample = new UserExample();
+userExample.or().andUserNameEqualTo("xxx").andCreateTimeLessThan(new Date());
+userExample.or().andEmailEqualTo("xxx").andCertIsNotNull();
+userExample.or().andPhoneEqualTo("xxx").andVerifyIn(Arrays.asList(1, 2, 3));
+userMapper.selectByExample(userExample);
+#+END_SRC
+
+生成的 sql 如下
+#+BEGIN_SRC sql
+select xx from `t_user` where (name = 'xx' and create_time &lt; now) or (email = 'xxx' and `cert` is not null) or (phone = 'xxx' and verify in (1, 2, 3))
+#+END_SRC
+
+如果要生成条件复杂的 or 语句(比如在一个 and 条件里面有好几个 or), exmple 将会无法实现, 此时就需要手写 sql 了
+
+
