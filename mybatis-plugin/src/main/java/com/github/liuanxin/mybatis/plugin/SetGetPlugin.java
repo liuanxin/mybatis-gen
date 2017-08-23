@@ -11,7 +11,6 @@ import org.mybatis.generator.logging.LogFactory;
 
 import java.util.List;
 
-/** 给 model 生成一个注解, 同时抑制一堆的 get/set */
 public class SetGetPlugin extends PluginAdapter {
 
     private Log logger = LogFactory.getLog(getClass());
@@ -63,18 +62,15 @@ public class SetGetPlugin extends PluginAdapter {
         topLevelClass.addAnnotation("@NoArgsConstructor");
 
         // set 返回 this
-        topLevelClass.addImportedType("lombok.experimental.Accessors");
-        topLevelClass.addAnnotation("@Accessors(chain = true)");
+        // topLevelClass.addImportedType("lombok.experimental.Accessors");
+        // topLevelClass.addAnnotation("@Accessors(chain = true)");
         return true;
     }
 
     /** 加入分页的方法. 以及按 hander 处理结果集的方法 */
-    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method,
-                                                                 Interface interfaze,
-                                                                 IntrospectedTable introspectedTable) {
+    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         // 导入分页类
-        // FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.mte.page.model.Page");
-        FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.miemiedev.mybatis.paginator.domain.PageBounds");
+        FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.liuanxin.page.model.PageBounds");
         interfaze.addImportedType(pageType);
 
         // 加入分页方法
@@ -102,9 +98,7 @@ public class SetGetPlugin extends PluginAdapter {
         return true;
     }
 
-    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method,
-                                                                    Interface interfaze,
-                                                                    IntrospectedTable introspectedTable) {
+    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         return clientSelectByExampleWithBLOBsMethodGenerated(method, interfaze, introspectedTable);
     }
 
