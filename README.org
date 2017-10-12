@@ -4,7 +4,7 @@
 + 设置 ~var.properties~ 文件内容, 配置成要生成代码的相关数据库连接信息  
 + 运行 ~com.github.mte.SqlGenTest~ 类. 测试类将会输出类似下面的 xml
 #+BEGIN_SRC xml
-<table tableName="t_config" domainObjectName="Config" escapeWildcards="true"
+<table tableName="t_system_config" domainObjectName="SystemConfig" escapeWildcards="true"
 		 enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true"
 		 enableSelectByExample="true" delimitIdentifiers="true" delimitAllColumns="true"/>
 #+END_SRC
@@ -17,9 +17,9 @@
 
 ** 说明
 
-  本插件基于 mybatis generator 二次开发. 在原有的基础上生成了一些额外的东西(如新生成一个空的 xml 实现), 去掉了一些东西(如 model 的 set get 方法, 改由 lombok 生成)
+本插件基于 mybatis generator 二次开发. 在原有的基础上生成了一些额外的东西(如新生成一个空的 xml 实现和将表注释写到 model 中), 去掉了一些东西(如 model 的 set get 方法, 改由 lombok 生成)
 
-: 一共会生成 5 个文件, 如果全注解(不生成 xml)的话, 将会生成 4 个文件(多一个 SqlProvider.java, 两个 xml 没有了)
+: xml 会生成 5 个文件, 如果全注解(不生成 xml)的话将会生成 4 个(多一个 SqlProvider.java, 两个 xml 没有了)
 : model      : 跟数据库表关联的对象
 : example    : 操作数据库的 example 对象, 跟上面的平级
 : repository : 接口文件
@@ -27,6 +27,7 @@
 : xml        : 自动生成的 xml 文件(sql 语句), 主要是上面接口文件的实现
 : custom xml : 一个空的 xml 文件, 主要用来添加项目后期自己编写的 sql
 
+在 ~generatorConfig.xml~ 中有这么一段配置
 #+BEGIN_SRC xml
 <javaClientGenerator type="annotatedMapper" targetPackage="${xxx}.repository" targetProject="${yyy}/java">
     <property name="enableSubPackages" value="true" />
@@ -51,7 +52,7 @@
 select xxx from `t_user` where user_name = 'sz' and level > 1 and verify in (1, 2, 3)
 #+END_SRC
 
-这样构建  example 来达到上面的效果
+可以用纯 Java 代码的方式来构建 example 以达到上面的效果
 #+BEGIN_SRC java
 UserExample userExample = new UserExample();
 userExample.or().andUserNameEqualTo(phone).andLevelGreaterThan(1).andVerifyIn(Arrays.asList(1, 2, 3));
@@ -67,7 +68,7 @@ userMapper.updateByExampleSelective(new User().setPassword("abc"), userExample);
 
 上面将会生成如下的 sql 语句
 #+BEGIN_SRC sql
-update `t_user` set password='abc' where user_name = 'sz' and level > 1 and verify in (1, 2, 3)
+update `t_user` set password = 'abc' where user_name = 'sz' and level > 1 and verify in (1, 2, 3)
 #+END_SRC
 
 如果要生成 or 语句, 可以像这样
@@ -88,5 +89,3 @@ where (name = 'xx' and create_time &lt; now)
 #+END_SRC
 
 如果要生成条件复杂的 or 语句(比如在一个 and 条件里面还有 or), exmple 将会无法实现, 此时就需要手写 sql 了
-
-
