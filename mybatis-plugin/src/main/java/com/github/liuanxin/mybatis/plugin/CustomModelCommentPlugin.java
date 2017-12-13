@@ -68,9 +68,9 @@ public class CustomModelCommentPlugin extends PluginAdapter {
                 /*
                 if ("java.util.Date".equalsIgnoreCase(column.getFullyQualifiedJavaType().toString())) {
                     String propertyName = underlineToCamel(columnName);
-                    f.addJavaDocLine(String.format("*//** 为 \"%s\" 提供查询的起始值 *//*", columnName));
+                    f.addJavaDocLine(String.format("/** 为 \"%s\" 提供查询的起始值 * /", columnName));
                     f.addJavaDocLine(String.format("private Date %sStart;", propertyName));
-                    f.addJavaDocLine(String.format("*//** 为 \"%s\" 提供查询的结束值 *//*", columnName));
+                    f.addJavaDocLine(String.format("/** 为 \"%s\" 提供查询的结束值 * /", columnName));
                     f.addJavaDocLine(String.format("private Date %sEnd;", propertyName));
                 }
                 */
