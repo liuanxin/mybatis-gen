@@ -30,7 +30,7 @@
             <property name="cache_size" value="1024"/>
             <property name="cache_readOnly" value="true"/>
             <property name="cache_blocking" value="true"/>
-            <property name="cache_eviction" value="LRU"/>  - ->
+            <property name="cache_eviction" value="LRU"/> - ->
         </plugin>-->
         <!--
         上面的配置最终会在 xml 中生成下面的配置
