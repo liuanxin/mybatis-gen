@@ -34,11 +34,12 @@ import java.util.List;
 public class CustomCachePlugin extends PluginAdapter {
 
     public enum CacheProperty {
+        TYPE("cache_type", "type"), //$NON-NLS-1$ //$NON-NLS-2$
         EVICTION("cache_eviction", "eviction"), //$NON-NLS-1$ //$NON-NLS-2$
         FLUSH_INTERVAL("cache_flushInterval", "flushInterval"), //$NON-NLS-1$ //$NON-NLS-2$
-        READ_ONLY("cache_readOnly", "readOnly"), //$NON-NLS-1$ //$NON-NLS-2$
         SIZE("cache_size", "size"), //$NON-NLS-1$ //$NON-NLS-2$
-        TYPE("cache_type", "type"); //$NON-NLS-1$ //$NON-NLS-2$
+        READ_ONLY("cache_readOnly", "readOnly"), //$NON-NLS-1$ //$NON-NLS-2$
+        BLOCKING("cache_blocking", "blocking"); //$NON-NLS-1$ //$NON-NLS-2$
 
         private String propertyName;
         private String attributeName;
