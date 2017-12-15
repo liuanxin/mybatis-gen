@@ -13,6 +13,15 @@ public class SqlGenTest extends AbstractTransactionalJUnit4SpringContextTests {
     private static final String FORMAT = "\n<table tableName=\"%s\" domainObjectName=\"%s\" escapeWildcards=\"true\"\n"
             + "\t\t enableCountByExample=\"true\" enableUpdateByExample=\"true\" enableDeleteByExample=\"true\"\n"
             + "\t\t enableSelectByExample=\"true\" delimitIdentifiers=\"true\" delimitAllColumns=\"true\"/>";
+    // <generatedKey column="id" sqlStatement="SELECT LAST_INSERT_ID()" />
+    // </table>
+
+    // 通过这种方式生成的 xml 中 insert 会自动添加
+    // <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.Long">
+    //     SELECT LAST_INSERT_ID()
+    // </selectKey>
+    // 一般来说不需要. com.github.liuanxin.mybatis.plugin.SetGetPlugin.sqlMapInsertSelectiveElementGenerated
+    // 见 http://www.mybatis.org/generator/configreference/generatedKey.html
 
     @Test
     public void testMybatisCreate() throws Exception {
