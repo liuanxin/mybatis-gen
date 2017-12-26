@@ -62,7 +62,7 @@
         <jdbcConnection driverClass="${class}" connectionURL="${conn}" userId="${user_name}" password="${password}"/>
 
         <!-- 生成的实体类 -->
-        <javaModelGenerator targetPackage="${parentPackage}.model" targetProject="${targetPath}/java">
+        <javaModelGenerator targetPackage="${modelPackage}" targetProject="${targetPath}/java">
             <property name="enableSubPackages" value="true"/>
         </javaModelGenerator>
 
@@ -70,9 +70,7 @@
         <sqlMapGenerator targetPackage="${xmlDir}" targetProject="${targetPath}/resources"/>
 
         <!-- 生成的 java 实现 -->
-        <javaClientGenerator type="alias"
-                             targetPackage="${parentPackage}.repository"
-                             targetProject="${targetPath}/java">
+        <javaClientGenerator type="alias" targetPackage="${mapperPackage}" targetProject="${targetPath}/java">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
 
