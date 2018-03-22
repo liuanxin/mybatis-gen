@@ -1,4 +1,4 @@
-package com.github.mte;
+package com.github.liuanxin;
 
 import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;

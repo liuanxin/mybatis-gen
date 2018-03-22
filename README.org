@@ -2,7 +2,7 @@
 ** 使用
 
 + 设置 ~var.properties~ 文件内容, 配置成要生成代码的相关数据库连接信息  
-+ 运行 ~com.github.mte.SqlGenTest~ 类. 测试类将会输出类似下面的 xml
++ 运行 ~com.github.liuanxin.SqlGenTest~ 类. 测试类将会输出类似下面的 xml
 #+BEGIN_SRC xml
 <table tableName="t_system_config" domainObjectName="SystemConfig" escapeWildcards="true"
 		 enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true"
