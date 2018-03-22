@@ -41,8 +41,8 @@
 : mapper          > 生成 xml 实现, 跟 XMLMAPPER 一样
 
 添加了两种(无视大小写)
-: alias > 生成 xml 实现, 每个表会在 sql 和 result map 中多加一个别名, 供多表时使用
-: aliasAndEmpty > 除了上面的别名, 使用 Ognl 类的方法而不止是用 != 来进行比较
+: alias           > 生成 xml 实现, 每个表会在 sql 和 result map 中多加一个别名, 供多表时使用
+: aliasAndEmpty   > 除了上面的别名, 使用 Ognl 类的方法而不止是用 != 来进行比较
 
 
 ** 多用 example
