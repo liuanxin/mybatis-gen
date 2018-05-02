@@ -38,7 +38,7 @@
 : annotatedMapper > 全部生成 Java 代码, example 的 sql 会有一个 SqlProvider 来生成
 : mixedMapper     > 一半 Java 代码, 一半 xml, 简单 sql 由注解生成, example 的 sql 由 xml 生成
 : xmlMapper       > 生成 xml 实现
-: mapper          > 生成 xml 实现, 跟 XMLMAPPER 一样
+: mapper          > 生成 xml 实现, 跟 xmlMapper 一样
 
 添加了两种(无视大小写), *建议日常使用 alias 即可, 如果想将字段置成空值, 使用 Empty 将需要手写 sql 了*
 : alias           > 生成 xml 实现, 每个表会在 sql 和 result map 中多加一个别名, 供多表时使用
