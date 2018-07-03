@@ -11,7 +11,7 @@
 
     <bean id="dataSource" class="org.springframework.jdbc.datasource.SingleConnectionDataSource">
         <property name="driverClassName" value="${class}"/>
-        <property name="url" value="${url}"/>
+        <property name="url" value="${conn}"/>
         <property name="username" value="${user_name}"/>
         <property name="password" value="${password}"/>
     </bean>
