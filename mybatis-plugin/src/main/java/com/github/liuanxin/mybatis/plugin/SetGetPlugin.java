@@ -13,7 +13,7 @@ import java.util.List;
 
 public class SetGetPlugin extends PluginAdapter {
 
-    private Log logger = LogFactory.getLog(getClass());
+    private static final Log LOGGER = LogFactory.getLog(SetGetPlugin.class);
 
     @Override
     public boolean validate(List<String> list) {
@@ -37,7 +37,7 @@ public class SetGetPlugin extends PluginAdapter {
                 element.addAttribute(new Attribute("keyColumn", pk.getActualColumnName()));
                 element.addAttribute(new Attribute("keyProperty", pk.getJavaProperty()));
             } else {
-                logger.warn(String.format("注意: 表(%s)的主键是多个列的复合主键, 请修改 insert 语句的 xml 映射\n",
+                LOGGER.warn(String.format("注意: 表(%s)的主键是多个列的复合主键, 请修改 insert 语句的 xml 映射\n",
                         introspectedTable.getTableConfiguration().getTableName()));
             }
         }
@@ -46,20 +46,20 @@ public class SetGetPlugin extends PluginAdapter {
 
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
-        // topLevelClass.addImportedType("lombok.Data");
-        // topLevelClass.addAnnotation("@Data");
+        topLevelClass.addImportedType("lombok.Data");
+        topLevelClass.addAnnotation("@Data");
 
-        topLevelClass.addImportedType("lombok.Setter");
-        topLevelClass.addAnnotation("@Setter");
+        //topLevelClass.addImportedType("lombok.Setter");
+        //topLevelClass.addAnnotation("@Setter");
 
-        topLevelClass.addImportedType("lombok.Getter");
-        topLevelClass.addAnnotation("@Getter");
+        //topLevelClass.addImportedType("lombok.Getter");
+        //topLevelClass.addAnnotation("@Getter");
 
-        // topLevelClass.addImportedType("lombok.ToString");
-        // topLevelClass.addAnnotation("@ToString");
+        //topLevelClass.addImportedType("lombok.ToString");
+        //topLevelClass.addAnnotation("@ToString");
 
-        topLevelClass.addImportedType("lombok.NoArgsConstructor");
-        topLevelClass.addAnnotation("@NoArgsConstructor");
+        //topLevelClass.addImportedType("lombok.NoArgsConstructor");
+        //topLevelClass.addAnnotation("@NoArgsConstructor");
 
         // set 返回 this
         // topLevelClass.addImportedType("lombok.experimental.Accessors");
@@ -67,8 +67,12 @@ public class SetGetPlugin extends PluginAdapter {
         return true;
     }
 
-    /** 加入分页的方法. 以及按 hander 处理结果集的方法 */
-    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    /**
+     * 加入分页的方法. 以及按 hander 处理结果集的方法
+     */
+    @Override
+    public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze,
+                                                                 IntrospectedTable introspectedTable) {
         // 导入分页类
         FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.liuanxin.page.model.PageBounds");
         interfaze.addImportedType(pageType);
@@ -98,24 +102,37 @@ public class SetGetPlugin extends PluginAdapter {
         return true;
     }
 
-    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    @Override
+    public boolean clientSelectByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze,
+                                                                    IntrospectedTable introspectedTable) {
         return clientSelectByExampleWithBLOBsMethodGenerated(method, interfaze, introspectedTable);
     }
 
-    /** 不生成 get 方法 */
+    /**
+     * 不生成 get 方法
+     */
     @Override
-    public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
+    public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass,
+                                              IntrospectedColumn introspectedColumn,
+                                              IntrospectedTable introspectedTable,
+                                              ModelClassType modelClassType) {
         return false;
     }
 
-    /** 不生成 set 方法 */
+    /**
+     * 不生成 set 方法
+     */
     @Override
-    public boolean modelSetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
+    public boolean modelSetterMethodGenerated(Method method, TopLevelClass topLevelClass,
+                                              IntrospectedColumn introspectedColumn,
+                                              IntrospectedTable introspectedTable,
+                                              ModelClassType modelClassType) {
         return false;
     }
 
     @Override
-    public boolean clientInsertMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    public boolean clientInsertMethodGenerated(Method method, Interface interfaze,
+                                               IntrospectedTable introspectedTable) {
         return false;
     }
 
@@ -125,42 +142,50 @@ public class SetGetPlugin extends PluginAdapter {
     }
 
     @Override
-    public boolean clientUpdateByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    public boolean clientUpdateByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze,
+                                                                 IntrospectedTable introspectedTable) {
         return false;
     }
 
     @Override
-    public boolean sqlMapUpdateByExampleWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapUpdateByExampleWithBLOBsElementGenerated(XmlElement element,
+                                                                  IntrospectedTable introspectedTable) {
         return false;
     }
 
     @Override
-    public boolean clientUpdateByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    public boolean clientUpdateByExampleWithoutBLOBsMethodGenerated(Method method, Interface interfaze,
+                                                                    IntrospectedTable introspectedTable) {
         return false;
     }
 
     @Override
-    public boolean sqlMapUpdateByExampleWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapUpdateByExampleWithoutBLOBsElementGenerated(XmlElement element,
+                                                                     IntrospectedTable introspectedTable) {
         return false;
     }
 
     @Override
-    public boolean clientUpdateByPrimaryKeyWithBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    public boolean clientUpdateByPrimaryKeyWithBLOBsMethodGenerated(Method method, Interface interfaze,
+                                                                    IntrospectedTable introspectedTable) {
         return false;
     }
 
     @Override
-    public boolean sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapUpdateByPrimaryKeyWithBLOBsElementGenerated(XmlElement element,
+                                                                     IntrospectedTable introspectedTable) {
         return false;
     }
 
     @Override
-    public boolean clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    public boolean clientUpdateByPrimaryKeyWithoutBLOBsMethodGenerated(Method method, Interface interfaze,
+                                                                       IntrospectedTable introspectedTable) {
         return false;
     }
 
     @Override
-    public boolean sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
+    public boolean sqlMapUpdateByPrimaryKeyWithoutBLOBsElementGenerated(XmlElement element,
+                                                                        IntrospectedTable introspectedTable) {
         return false;
     }
 }
