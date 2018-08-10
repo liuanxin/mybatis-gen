@@ -21,7 +21,8 @@ public class SetGetPlugin extends PluginAdapter {
     }
 
     @Override
-    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+    public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass,
+                                   IntrospectedTable introspectedTable) {
         // interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
         // interfaze.addAnnotation("@Repository");
         return true;
