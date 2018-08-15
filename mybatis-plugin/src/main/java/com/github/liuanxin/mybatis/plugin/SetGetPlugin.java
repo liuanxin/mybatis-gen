@@ -38,7 +38,7 @@ public class SetGetPlugin extends PluginAdapter {
                 element.addAttribute(new Attribute("keyColumn", pk.getActualColumnName()));
                 element.addAttribute(new Attribute("keyProperty", pk.getJavaProperty()));
             } else {
-                LOGGER.warn(String.format("注意: 表(%s)的主键是多个列的复合主键, 请修改 insert 语句的 xml 映射\n",
+                LOGGER.warn(String.format("注意: 表(%s)的主键是多个列的复合主键, 请留意与其相关的 sql 语句\n",
                         introspectedTable.getTableConfiguration().getTableName()));
             }
         }
