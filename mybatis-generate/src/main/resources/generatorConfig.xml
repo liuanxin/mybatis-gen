@@ -70,7 +70,7 @@
         <sqlMapGenerator targetPackage="${xmlDir}" targetProject="${targetPath}/resources"/>
 
         <!-- 生成的 java 实现 -->
-        <javaClientGenerator type="alias" targetPackage="${mapperPackage}" targetProject="${targetPath}/java">
+        <javaClientGenerator type="mapper" targetPackage="${mapperPackage}" targetProject="${targetPath}/java">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
 
