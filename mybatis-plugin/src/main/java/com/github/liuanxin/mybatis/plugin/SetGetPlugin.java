@@ -84,6 +84,11 @@ public class SetGetPlugin extends PluginAdapter {
         interfaze.addMethod(pageBoundsMethod);
 
         /*
+        interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
+        interfaze.addAnnotation("@Repository");
+        */
+
+        /*
         FullyQualifiedJavaType typeHandlerType = new FullyQualifiedJavaType("org.apache.ibatis.session.ResultHandler");
         interfaze.addImportedType(typeHandlerType);
 
