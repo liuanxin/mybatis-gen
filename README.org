@@ -55,15 +55,18 @@ select xxx from `t_user` where user_name = 'sz' and level > 1 and verify in (1, 
 可以用纯 Java 代码的方式来构建 example 以达到上面的效果
 #+BEGIN_SRC java
 UserExample userExample = new UserExample();
-userExample.or().andUserNameEqualTo(phone).andLevelGreaterThan(1).andVerifyIn(Arrays.asList(1, 2, 3));
+userExample.or().andUserNameEqualTo("sz").andLevelGreaterThan(1).andVerifyIn(Arrays.asList(1, 2, 3));
 userMapper.selectByExample(userExample);
 #+END_SRC
 
 同样的 where 条件也可以用在 update 和 delete 上
 #+BEGIN_SRC java
 UserExample userExample = new UserExample();
-userExample.or().andUserNameNameEqualTo(phone).andLevelGreaterThan(1).andVerifyIn(Arrays.asList(1, 2, 3));
-userMapper.updateByExampleSelective(new User().setPassword("abc"), userExample);
+userExample.or().andUserNameNameEqualTo("sz").andLevelGreaterThan(1).andVerifyIn(Arrays.asList(1, 2, 3));
+
+User user = new User();
+user.setPassword("abc");
+userMapper.updateByExampleSelective(user, userExample);
 #+END_SRC
 
 上面将会生成如下的 sql 语句
@@ -83,7 +86,7 @@ userMapper.selectByExample(userExample);
 生成的 sql 如下
 #+BEGIN_SRC sql
 select xx from `t_user` 
-where (name = 'xx' and create_time &lt; now)
+where (name = 'xx' and create_time < '201x-xx-xx xx:xx:xx')
    or (email = 'xxx' and `cert` is not null)
    or (phone = 'xxx' and verify in (1, 2, 3))
 #+END_SRC
