@@ -87,7 +87,8 @@ public class CustomModelCommentPlugin extends PluginAdapter {
         }
     }
 
-    /** 下划线 或 中横线 转 驼峰 */
+    // /** 下划线 或 中横线 转 驼峰 */
+    /*
     private static String underlineToCamel(String param) {
         if (param == null || "".equals(param.trim())) {
             return "";
@@ -107,5 +108,6 @@ public class CustomModelCommentPlugin extends PluginAdapter {
         }
         return sb.toString();
     }
+    */
 }
 
