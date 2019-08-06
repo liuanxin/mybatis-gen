@@ -105,7 +105,6 @@ public class BatchInsertPlugin extends PluginAdapter {
         element.addElement(new TextElement(")"));
         element.addElement(new TextElement("values"));
 
-        // foreach 所有插入的列，比较是否存在
         XmlElement values = new XmlElement("foreach");
         values.addAttribute(new Attribute("collection", "list"));
         values.addAttribute(new Attribute("item", "item"));
