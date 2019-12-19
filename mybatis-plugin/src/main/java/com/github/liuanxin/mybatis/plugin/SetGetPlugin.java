@@ -23,8 +23,8 @@ public class SetGetPlugin extends PluginAdapter {
     @Override
     public boolean clientGenerated(Interface interfaze, TopLevelClass topLevelClass,
                                    IntrospectedTable introspectedTable) {
-        // interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
-        // interfaze.addAnnotation("@Repository");
+        interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
+        interfaze.addAnnotation("@Repository");
         return true;
     }
 
@@ -33,13 +33,12 @@ public class SetGetPlugin extends PluginAdapter {
         List<IntrospectedColumn> primaryKeyColumns = introspectedTable.getPrimaryKeyColumns();
         if (primaryKeyColumns != null) {
             if (primaryKeyColumns.size() == 1) {
-                IntrospectedColumn pk = primaryKeyColumns.get(0);
+                IntrospectedColumn column = primaryKeyColumns.get(0);
                 element.addAttribute(new Attribute("useGeneratedKeys", "true"));
-                element.addAttribute(new Attribute("keyColumn", pk.getActualColumnName()));
-                element.addAttribute(new Attribute("keyProperty", pk.getJavaProperty()));
+                element.addAttribute(new Attribute("keyColumn", column.getActualColumnName()));
+                element.addAttribute(new Attribute("keyProperty", column.getJavaProperty()));
             } else {
-                LOGGER.warn(String.format("注意: 表(%s)的主键是多个列的复合主键, 请留意与其相关的 sql 语句\n",
-                        introspectedTable.getTableConfiguration().getTableName()));
+                LOGGER.warn(String.format("注意: 表(%s)是复合主键", introspectedTable.getTableConfiguration().getTableName()));
             }
         }
         return true;
