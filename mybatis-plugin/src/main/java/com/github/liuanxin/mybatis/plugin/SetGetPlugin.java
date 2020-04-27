@@ -31,14 +31,15 @@ public class SetGetPlugin extends PluginAdapter {
     @Override
     public boolean sqlMapInsertSelectiveElementGenerated(XmlElement element, IntrospectedTable introspectedTable) {
         List<IntrospectedColumn> primaryKeyColumns = introspectedTable.getPrimaryKeyColumns();
-        if (primaryKeyColumns != null) {
+        if (primaryKeyColumns != null && primaryKeyColumns.size() > 0) {
             if (primaryKeyColumns.size() == 1) {
                 IntrospectedColumn column = primaryKeyColumns.get(0);
                 element.addAttribute(new Attribute("useGeneratedKeys", "true"));
                 element.addAttribute(new Attribute("keyColumn", column.getActualColumnName()));
                 element.addAttribute(new Attribute("keyProperty", column.getJavaProperty()));
             } else {
-                LOGGER.warn(String.format("注意: 表(%s)是复合主键", introspectedTable.getTableConfiguration().getTableName()));
+                LOGGER.warn(String.format("注意: 表(%s)是复合主键(%s)",
+                        introspectedTable.getTableConfiguration().getTableName(), primaryKeyColumns));
             }
         }
         return true;
