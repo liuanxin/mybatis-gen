@@ -12,7 +12,7 @@
     <!--
     关于 targetRuntime >>
         更新的时候使用 MyBatis3 避免覆盖 cust.xml
-        新表使用 IntrospectedTableMyBatis, 会多生成一个自定义的 xml.
+        新表使用 com.github.liuanxin.mybatis.code.IntrospectedTableMyBatis, 会多生成一个自定义的 xml.
     -->
     <context id="MySqlTables" targetRuntime="com.github.liuanxin.mybatis.code.IntrospectedTableMyBatis">
         <!--定义 mysql 的转义符, 结合 table 标签的 delimitIdentifiers, delimitAllColumns 使用-->
@@ -70,7 +70,11 @@
         <!-- 生成的 xml 配置 -->
         <sqlMapGenerator targetPackage="${xmlDir}" targetProject="${targetPath}/resources"/>
 
-        <!-- 生成的 java 实现 -->
+        <!--
+        生成的 java 实现
+        上面的 targetRuntime 用 MyBatis3 时这里用 mapper
+        用 com.github.liuanxin.mybatis.code.IntrospectedTableMyBatis 时用 alias
+        -->
         <javaClientGenerator type="alias" targetPackage="${mapperPackage}" targetProject="${targetPath}/java">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
