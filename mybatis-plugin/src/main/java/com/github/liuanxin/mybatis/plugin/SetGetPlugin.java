@@ -59,8 +59,8 @@ public class SetGetPlugin extends PluginAdapter {
         //topLevelClass.addImportedType("lombok.ToString");
         //topLevelClass.addAnnotation("@ToString");
 
-        //topLevelClass.addImportedType("lombok.NoArgsConstructor");
-        //topLevelClass.addAnnotation("@NoArgsConstructor");
+        topLevelClass.addImportedType("lombok.NoArgsConstructor");
+        topLevelClass.addAnnotation("@NoArgsConstructor");
 
         // set 返回 this
         // topLevelClass.addImportedType("lombok.experimental.Accessors");
