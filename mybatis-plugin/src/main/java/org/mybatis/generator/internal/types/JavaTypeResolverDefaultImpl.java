@@ -149,8 +149,8 @@ public class JavaTypeResolverDefaultImpl implements JavaTypeResolver {
                 .get(introspectedColumn.getJdbcType());
 
         // logger.warn("type:" + introspectedColumn.getJdbcType() + ", length:" + introspectedColumn.getLength());
-        // tinyint ==> Boolean
-        if (introspectedColumn.getJdbcType() == Types.TINYINT) {
+        // tinyint(3|2|1) ==> Boolean
+        if (introspectedColumn.getJdbcType() == Types.TINYINT && introspectedColumn.getLength() <= 3) {
             jdbcTypeInformation = new JdbcTypeInformation("BIT", new FullyQualifiedJavaType(Boolean.class.getName()));
         }
         // add code
