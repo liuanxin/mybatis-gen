@@ -148,18 +148,21 @@ public class JavaTypeResolverDefaultImpl implements JavaTypeResolver {
         JdbcTypeInformation jdbcTypeInformation = typeMap
                 .get(introspectedColumn.getJdbcType());
 
-        // logger.warn("type:" + introspectedColumn.getJdbcType() + ", length:" + introspectedColumn.getLength());
-        // tinyint(3|2|1) ==> Boolean
-        if (introspectedColumn.getJdbcType() == Types.TINYINT && introspectedColumn.getLength() <= 3) {
-            jdbcTypeInformation = new JdbcTypeInformation("BIT", new FullyQualifiedJavaType(Boolean.class.getName()));
+        // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-type-conversions.html
+        // if want mysql has type tinyint(1) return to number, append「tinyInt1isBit=false」to url
+        // tinyint(1) ==> Boolean, tinyint( > 1) ==> Integer
+        if (introspectedColumn.getJdbcType() == Types.TINYINT) {
+            if (introspectedColumn.getLength() == 1) {
+                jdbcTypeInformation = new JdbcTypeInformation("BIT", new FullyQualifiedJavaType(Boolean.class.getName()));
+            } else {
+                jdbcTypeInformation = new JdbcTypeInformation("BIT", new FullyQualifiedJavaType(Integer.class.getName()));
+            }
         }
-        // add code
 
         if (jdbcTypeInformation != null) {
             answer = jdbcTypeInformation.getFullyQualifiedJavaType();
             answer = overrideDefaultType(introspectedColumn, answer);
         }
-
         return answer;
     }
 
