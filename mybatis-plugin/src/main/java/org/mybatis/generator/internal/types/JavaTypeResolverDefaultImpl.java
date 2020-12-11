@@ -32,8 +32,6 @@ import java.util.*;
  */
 public class JavaTypeResolverDefaultImpl implements JavaTypeResolver {
 
-    // private static final Log logger = LogFactory.getLog(JavaTypeResolverDefaultImpl.class);
-
     protected List<String> warnings;
 
     protected Properties properties;
@@ -153,10 +151,12 @@ public class JavaTypeResolverDefaultImpl implements JavaTypeResolver {
         // tinyint(1) ==> Boolean, tinyint( > 1) ==> Integer
         if (introspectedColumn.getJdbcType() == Types.TINYINT) {
             if (introspectedColumn.getLength() == 1) {
-                jdbcTypeInformation = new JdbcTypeInformation("BIT", new FullyQualifiedJavaType(Boolean.class.getName()));
+                jdbcTypeInformation = new JdbcTypeInformation("TINYINT", new FullyQualifiedJavaType(Boolean.class.getName()));
             } else {
-                jdbcTypeInformation = new JdbcTypeInformation("BIT", new FullyQualifiedJavaType(Integer.class.getName()));
+                jdbcTypeInformation = new JdbcTypeInformation("TINYINT", new FullyQualifiedJavaType(Integer.class.getName()));
             }
+        } else if (introspectedColumn.getJdbcType() == Types.SMALLINT) {
+            jdbcTypeInformation = new JdbcTypeInformation("SMALLINT", new FullyQualifiedJavaType(Integer.class.getName()));
         }
 
         if (jdbcTypeInformation != null) {
