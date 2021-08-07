@@ -18,10 +18,14 @@ public class BlobColumnListElementGenerator extends AbstractXmlElementGenerator 
 
     @Override
     public void addElements(XmlElement parentElement) {
+        String alias = introspectedTable.getTableConfiguration().getAlias();
+        introspectedTable.getTableConfiguration().setAlias(null);
+
+        introspectedTable.setBlobColumnListId(introspectedTable.getTableConfiguration().getDomainObjectName() + "BlobColumn");
+
         XmlElement answer = new XmlElement("sql"); //$NON-NLS-1$
 
-        answer.addAttribute(new Attribute("id", //$NON-NLS-1$
-                introspectedTable.getBlobColumnListId()));
+        answer.addAttribute(new Attribute("id", introspectedTable.getBlobColumnListId()));
 
         context.getCommentGenerator().addComment(answer);
 
@@ -52,8 +56,7 @@ public class BlobColumnListElementGenerator extends AbstractXmlElementGenerator 
     private void generateAlias(XmlElement parentElement) {
         XmlElement answer = new XmlElement("sql"); //$NON-NLS-1$
 
-        answer.addAttribute(new Attribute("id", //$NON-NLS-1$
-                introspectedTable.getBlobColumnListId() + "_Alias"));
+        answer.addAttribute(new Attribute("id", introspectedTable.getBlobColumnListId() + "Alias"));
 
         context.getCommentGenerator().addComment(answer);
 

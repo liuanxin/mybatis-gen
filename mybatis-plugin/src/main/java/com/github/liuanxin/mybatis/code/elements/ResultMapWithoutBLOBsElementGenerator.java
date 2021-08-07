@@ -11,7 +11,7 @@ import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 public class ResultMapWithoutBLOBsElementGenerator extends AbstractXmlElementGenerator {
 
-    private boolean isSimple;
+    private final boolean isSimple;
 
     public ResultMapWithoutBLOBsElementGenerator(boolean isSimple) {
         super();
@@ -20,15 +20,41 @@ public class ResultMapWithoutBLOBsElementGenerator extends AbstractXmlElementGen
 
     @Override
     public void addElements(XmlElement parentElement) {
+        String alias = introspectedTable.getTableConfiguration().getAlias();
+
+        introspectedTable.setBaseResultMapId(introspectedTable.getTableConfiguration().getDomainObjectName() + "Map");
+        introspectedTable.setResultMapWithBLOBsId(introspectedTable.getTableConfiguration().getDomainObjectName() + "Blob");
+
+        introspectedTable.getTableConfiguration().setAlias(null);
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+            introspectedColumn.setTableAlias(null);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getBaseColumns()) {
+            introspectedColumn.setTableAlias(null);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getNonBLOBColumns()) {
+            introspectedColumn.setTableAlias(null);
+        }
         addElement(parentElement, false);
+
         // 在 resultMap 上加别名(当多表查询时会用到)
+        introspectedTable.getTableConfiguration().setAlias(alias);
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+            introspectedColumn.setTableAlias(alias);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getBaseColumns()) {
+            introspectedColumn.setTableAlias(alias);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getNonBLOBColumns()) {
+            introspectedColumn.setTableAlias(alias);
+        }
         addElement(parentElement, true);
     }
 
     private void addElement(XmlElement parentElement, boolean isAlias) {
         XmlElement answer = new XmlElement("resultMap"); //$NON-NLS-1$
         answer.addAttribute(new Attribute("id", isAlias ?
-                introspectedTable.getBaseResultMapId() + "_Alias" : introspectedTable.getBaseResultMapId()));
+                introspectedTable.getBaseResultMapId() + "Alias" : introspectedTable.getBaseResultMapId()));
 
         String returnType;
         if (isSimple) {
@@ -41,8 +67,7 @@ public class ResultMapWithoutBLOBsElementGenerator extends AbstractXmlElementGen
             }
         }
 
-        answer.addAttribute(new Attribute("type", //$NON-NLS-1$
-                returnType));
+        answer.addAttribute(new Attribute("type", returnType));
 
         context.getCommentGenerator().addComment(answer);
 

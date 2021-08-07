@@ -65,6 +65,10 @@ public class SetGetPlugin extends PluginAdapter {
         // set 返回 this
         // topLevelClass.addImportedType("lombok.experimental.Accessors");
         // topLevelClass.addAnnotation("@Accessors(chain = true)");
+
+        topLevelClass.addImportedType("com.baomidou.mybatisplus.annotation.TableName");
+        topLevelClass.addAnnotation(String.format("@TableName(\"%s\")", introspectedTable.getTableConfiguration().getTableName()));
+
         return true;
     }
 
@@ -74,18 +78,12 @@ public class SetGetPlugin extends PluginAdapter {
     @Override
     public boolean clientSelectByExampleWithBLOBsMethodGenerated(Method method, Interface interfaze,
                                                                  IntrospectedTable introspectedTable) {
-        // 导入分页类
+        /*
         FullyQualifiedJavaType pageType = new FullyQualifiedJavaType("com.github.liuanxin.page.model.PageBounds");
-        interfaze.addImportedType(pageType);
-
-        // 加入分页方法
         Method pageBoundsMethod = new Method(method);
         pageBoundsMethod.addParameter(new Parameter(pageType, "page"));
+        interfaze.addImportedType(pageType);
         interfaze.addMethod(pageBoundsMethod);
-
-        /*
-        interfaze.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Repository"));
-        interfaze.addAnnotation("@Repository");
         */
 
         /*

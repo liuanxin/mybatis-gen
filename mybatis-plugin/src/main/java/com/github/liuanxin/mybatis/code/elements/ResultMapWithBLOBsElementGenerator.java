@@ -16,8 +16,34 @@ public class ResultMapWithBLOBsElementGenerator extends
 
     @Override
     public void addElements(XmlElement parentElement) {
+        String alias = introspectedTable.getTableConfiguration().getAlias();
+
+        introspectedTable.setBaseResultMapId(introspectedTable.getTableConfiguration().getDomainObjectName() + "Map");
+        introspectedTable.setResultMapWithBLOBsId(introspectedTable.getTableConfiguration().getDomainObjectName() + "Blob");
+
+        introspectedTable.getTableConfiguration().setAlias(null);
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+            introspectedColumn.setTableAlias(null);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getBaseColumns()) {
+            introspectedColumn.setTableAlias(null);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getNonBLOBColumns()) {
+            introspectedColumn.setTableAlias(null);
+        }
         addElement(parentElement, false);
+
         // 在 resultMap 上加别名(当多表查询时会用到)
+        introspectedTable.getTableConfiguration().setAlias(alias);
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getPrimaryKeyColumns()) {
+            introspectedColumn.setTableAlias(alias);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getBaseColumns()) {
+            introspectedColumn.setTableAlias(alias);
+        }
+        for (IntrospectedColumn introspectedColumn : introspectedTable.getNonBLOBColumns()) {
+            introspectedColumn.setTableAlias(alias);
+        }
         addElement(parentElement, true);
     }
 
@@ -25,7 +51,7 @@ public class ResultMapWithBLOBsElementGenerator extends
         XmlElement answer = new XmlElement("resultMap"); //$NON-NLS-1$
 
         answer.addAttribute(new Attribute("id", isAlias ?
-                introspectedTable.getResultMapWithBLOBsId() + "_Alias" : introspectedTable.getResultMapWithBLOBsId()));
+                introspectedTable.getResultMapWithBLOBsId() + "Alias" : introspectedTable.getResultMapWithBLOBsId()));
 
         String returnType;
         if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
@@ -41,7 +67,7 @@ public class ResultMapWithBLOBsElementGenerator extends
 
         if (!introspectedTable.isConstructorBased()) {
             answer.addAttribute(new Attribute("extends", isAlias ?
-                    introspectedTable.getBaseResultMapId() + "_Alias" : introspectedTable.getBaseResultMapId()));
+                    introspectedTable.getBaseResultMapId() + "Alias" : introspectedTable.getBaseResultMapId()));
         }
 
         context.getCommentGenerator().addComment(answer);
@@ -60,9 +86,7 @@ public class ResultMapWithBLOBsElementGenerator extends
             }
         }
 
-        if (context.getPlugins()
-                .sqlMapResultMapWithBLOBsElementGenerated(answer,
-                        introspectedTable)) {
+        if (context.getPlugins().sqlMapResultMapWithBLOBsElementGenerated(answer, introspectedTable)) {
             parentElement.addElement(answer);
         }
     }

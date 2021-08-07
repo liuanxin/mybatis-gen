@@ -23,7 +23,7 @@
         <plugin type="com.github.liuanxin.mybatis.plugin.CustomSerializablePlugin"/>
         <plugin type="com.github.liuanxin.mybatis.plugin.SetGetPlugin"/>
         <plugin type="com.github.liuanxin.mybatis.plugin.CustomModelCommentPlugin"/>
-        <!--<plugin type="com.github.liuanxin.mybatis.plugin.BatchInsertPlugin"/>-->
+        <plugin type="com.github.liuanxin.mybatis.plugin.BatchInsertPlugin"/>
         <!-- 生成缓存(此 xml 中所有的 sql 都会走缓存), 注解: @CacheNamespace(implementation = RedisCache.class ...) -->
         <!--<plugin type="com.github.liuanxin.mybatis.plugin.CustomCachePlugin">
             <property name="cache_type" value="com.github.liuanxin.caches.RedisCache"/>
@@ -73,7 +73,7 @@
         <!--
         生成的 java 实现
         上面的 targetRuntime 用 MyBatis3 时这里用 mapper
-        用 com.github.liuanxin.mybatis.code.IntrospectedTableMyBatis 时用 alias
+        用 com.github.liuanxin.mybatis.code.IntrospectedTableMyBatis 时这里可以用 alias
         -->
         <javaClientGenerator type="alias" targetPackage="${mapperPackage}" targetProject="${targetPath}/java">
             <property name="enableSubPackages" value="true" />

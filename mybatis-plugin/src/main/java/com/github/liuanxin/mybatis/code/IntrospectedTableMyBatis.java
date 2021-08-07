@@ -8,7 +8,9 @@ import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.AbstractJavaClientGenerator;
 import org.mybatis.generator.codegen.mybatis3.IntrospectedTableMyBatis3Impl;
-import org.mybatis.generator.codegen.mybatis3.javamapper.*;
+import org.mybatis.generator.codegen.mybatis3.javamapper.AnnotatedClientGenerator;
+import org.mybatis.generator.codegen.mybatis3.javamapper.JavaMapperGenerator;
+import org.mybatis.generator.codegen.mybatis3.javamapper.MixedClientGenerator;
 import org.mybatis.generator.internal.ObjectFactory;
 
 import java.util.ArrayList;
@@ -37,7 +39,7 @@ public class IntrospectedTableMyBatis extends IntrospectedTableMyBatis3Impl {
             }
 
             // 多生成一个文件
-            addNewDocument(answer, document, xmlFileName, mapperPackage, formatter, targetProject);
+            // addNewDocument(answer, document, xmlFileName, mapperPackage, formatter, targetProject);
         }
         return answer;
     }
