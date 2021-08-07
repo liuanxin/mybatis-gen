@@ -12,7 +12,7 @@ public class SqlGenTest extends AbstractTransactionalJUnit4SpringContextTests {
     private static final String ALL_TABLE = "SHOW TABLES";
     private static final String FORMAT = "\n<table tableName=\"%s\" domainObjectName=\"%s\" alias=\"%s\"\n"
             + "\t\t enableCountByExample=\"false\" enableUpdateByExample=\"false\" enableDeleteByExample=\"false\" enableSelectByExample=\"false\"\n"
-            + "\t\t escapeWildcards=\"true\" delimitIdentifiers=\"true\" delimitAllColumns=\"true\"";
+            + "\t\t escapeWildcards=\"true\" delimitIdentifiers=\"true\" delimitAllColumns=\"true\"/>";
     // <generatedKey column="id" sqlStatement="SELECT LAST_INSERT_ID()" />
     // </table>
 
