@@ -10,10 +10,9 @@ import java.util.List;
 public class SqlGenTest extends AbstractTransactionalJUnit4SpringContextTests {
 
     private static final String ALL_TABLE = "SHOW TABLES";
-    private static final String FORMAT = "\n<table tableName=\"%s\" domainObjectName=\"%s\"\n"
-            + "\t\t alias=\"%s\" escapeWildcards=\"true\"\n"
-            + "\t\t enableCountByExample=\"true\" enableUpdateByExample=\"true\" enableDeleteByExample=\"true\"\n"
-            + "\t\t enableSelectByExample=\"true\" delimitIdentifiers=\"true\" delimitAllColumns=\"true\"/>";
+    private static final String FORMAT = "\n<table tableName=\"%s\" domainObjectName=\"%s\" alias=\"%s\"\n"
+            + "\t\t enableCountByExample=\"false\" enableUpdateByExample=\"false\" enableDeleteByExample=\"false\" enableSelectByExample=\"false\"\n"
+            + "\t\t escapeWildcards=\"true\" delimitIdentifiers=\"true\" delimitAllColumns=\"true\"";
     // <generatedKey column="id" sqlStatement="SELECT LAST_INSERT_ID()" />
     // </table>
 
