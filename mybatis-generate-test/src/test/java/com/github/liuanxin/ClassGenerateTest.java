@@ -19,34 +19,16 @@ import java.util.*;
 public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextTests {
 
     /** 文件生成目录 */
-    private static final String SAVE_PATH = "/home/ty/temp/";
+    private static final String SAVE_PATH = "/home/xx/temp/";
 
     /** 生成 java 文件的包名 */
-    private static final String PACKAGE = "com.zt.fbg.aftersale.temp";
+    private static final String PACKAGE = "com.github.xxx";
 
     /** 要生成代码的表名 */
     private static final Set<String> GENERATE_TABLES = Sets.newHashSet(Arrays.asList(
-            "after_sales_authorize_product_photos",
-            "after_sales_fee_deduction",
-            "after_sales_fee_detail",
-            "after_sales_fee_log",
-            "after_sales_fee_rebilling",
-            "after_sales_fee_rollback",
-            "after_sales_print_relations",
-            "after_sales_product_batch",
-            "after_sales_product_photos",
-            "after_sales_recharge_queue",
-            "after_sales_return_order_product",
-            "after_sales_return_orders",
-            "after_sales_return_orders_address",
-            "after_sales_return_orders_log",
-            "after_sales_sync_record",
-            "customer_after_sales_service",
-            "customer_after_sales_service_log",
-            "mq_receive",
-            "mq_receive_by_order",
-            "mq_send",
-            "order_export_record"
+            "t_common",
+            "t_user",
+            "t_product"
     ));
 
     // 上面是配置项, 下面的不用了
