@@ -250,8 +250,19 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             columnComment = ("".equals(columnComment) ? "" : (" " + columnComment + " -->"));
 
             sbd.append("\n");
-            sbd.append(tab(1)).append(String.format("/**%s %s */\n", columnComment, columnName));
-            sbd.append(tab(1)).append(String.format("private %s %s;\n", TYPE_MAP.get(columnType), toField(columnName)));
+            String fieldName = toField(columnName);
+            if (columnName.equals(fieldName)) {
+                if (!"".equals(columnComment)) {
+                    sbd.append(tab(1)).append(String.format("/**%s %s */\n", columnComment, columnName));
+                }
+            } else {
+                if ("".equals(columnComment)) {
+                    sbd.append(tab(1)).append(String.format("/** %s */\n", columnName));
+                } else {
+                    sbd.append(tab(1)).append(String.format("/**%s %s */\n", columnComment, columnName));
+                }
+            }
+            sbd.append(tab(1)).append(String.format("private %s %s;\n", TYPE_MAP.get(columnType), fieldName));
         }
         String modelClass = toClass(tableName) + MODEL_SUFFIX;
         String content = String.format(MODEL, MODEL_PACKAGE, tableComment, tableName, tableName, modelClass, sbd);
