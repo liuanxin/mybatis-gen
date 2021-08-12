@@ -36,6 +36,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String JAVA_PATH = SAVE_PATH + "java/";
     private static final String XML_PATH = SAVE_PATH + "resource/mapper/";
 
+    private static final String FEIGN_REQ_PACKAGE = PACKAGE + ".feign.req";
+    private static final String FEIGN_RES_PACKAGE = PACKAGE + ".feign.res";
     private static final String REQ_PACKAGE = PACKAGE + ".req";
     private static final String RES_PACKAGE = PACKAGE + ".res";
     private static final String MODEL_PACKAGE = PACKAGE + ".entity";
@@ -116,7 +118,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 System.out.printf("%s : %s\n", tableName, tableComment);
 
                 Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(SQL, tableName));
-                sbd.append(toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")).append(";\n\n\n");
+                sbd.append(toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
+                        .replace("ROW_FORMAT=DYNAMIC ", "")).append(";\n\n\n");
 
                 List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
                 /*
@@ -128,6 +131,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 }
                 */
 
+                feignReq(tableName, tableComment, columns);
+                feignRes(tableName, tableComment, columns);
                 req(tableName, tableComment, columns);
                 res(tableName, tableComment, columns);
                 service(tableName);
@@ -222,6 +227,63 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static void res(String tableName, String tableComment, List<Map<String, Object>> columns) {
         String content = reqAndRes(RES_PACKAGE, tableName + "_res", tableComment + " -- 出参", columns);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
+    }
+
+    private static final String FEIGN_REQ_RES = "package %s;\n" +
+            "\n" +
+            "%s\n" +
+            "%s" +
+            "\n" +
+            "/** %s */\n" +
+            "@Data\n" +
+            "public class %s implements Serializable {\n" +
+            "    private static final long serialVersionUID = 1L;\n" +
+            "%s" +
+            "}\n";
+    private static String feignReqAndRes(String classPackage, String tableName, String tableComment, List<Map<String, Object>> columns) {
+        Set<String> importSet = Sets.newHashSet("import lombok.Data;\n");
+        Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
+        StringBuilder sbd = new StringBuilder();
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String columnType = toStr(column.get(COLUMN_TYPE));
+            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            String columnComment = toStr(column.get(COLUMN_COMMENT));
+
+            sbd.append("\n");
+            String fieldName = toField(columnName);
+            if (!"".equals(columnComment)) {
+                sbd.append(tab(1)).append("/** ").append(columnComment).append(" */\n");
+            }
+            if (!columnName.equals(fieldName)) {
+                sbd.append(tab(1)).append("@JsonProperty(\"").append(columnName).append("\")\n");
+                importSet.add("import com.fasterxml.jackson.annotation.JsonProperty;\n");
+            }
+            String fieldType = TYPE_MAP.get(columnType);
+            sbd.append(tab(1)).append("private ").append(fieldType).append(" ").append(fieldName).append(";\n");
+            if ("Date".equals(fieldType)) {
+                javaImportSet.add("import java.util.Date;\n");
+            } else if ("BigDecimal".equals(fieldType)) {
+                javaImportSet.add("import java.math.BigDecimal;\n");
+            }
+        }
+
+        List<String> noJavaList = Lists.newArrayList(importSet);
+        Collections.sort(noJavaList);
+        String noJavaJoin = Joiner.on("").join(noJavaList);
+
+        List<String> javaList = Lists.newArrayList(javaImportSet);
+        Collections.sort(javaList);
+        String javaJoin = Joiner.on("").join(javaList);
+        return String.format(FEIGN_REQ_RES, classPackage, noJavaJoin, javaJoin, tableComment, toClass(tableName), sbd);
+    }
+    private static void feignReq(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        String content = feignReqAndRes(FEIGN_REQ_PACKAGE, tableName + "_req", tableComment + " -- feign 入参", columns);
+        writeFile(new File(JAVA_PATH + FEIGN_REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
+    }
+    private static void feignRes(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        String content = feignReqAndRes(FEIGN_RES_PACKAGE, tableName + "_res", tableComment + " -- feign 出参", columns);
+        writeFile(new File(JAVA_PATH + FEIGN_RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
     }
 
     private static final String MODEL = "package %s;\n" +
