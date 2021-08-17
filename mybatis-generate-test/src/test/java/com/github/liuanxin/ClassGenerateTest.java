@@ -146,9 +146,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
 
     private static void deleteDirectory(File dir) {
-        File[] allContents = dir.listFiles();
-        if (allContents != null) {
-            for (File file : allContents) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
                 deleteDirectory(file);
             }
         }
