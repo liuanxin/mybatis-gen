@@ -31,8 +31,6 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "t_product"
     ));
 
-    // 上面是配置项, 下面的不用了
-
     private static final String JAVA_PATH = SAVE_PATH + "java/";
     private static final String XML_PATH = SAVE_PATH + "resource/mapper/";
 
@@ -48,18 +46,24 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String DAO_SUFFIX = "Dao";
     private static final String SERVICE_SUFFIX = "Service";
 
+    /** 是否把 tinyint(1) 映射成 Boolean */
+    private static final boolean TINYINT1_TO_BOOLEAN = false;
+
+    // 上面是配置项, 下面的不用了
+
     private static final String TABLES = "SHOW TABLES";
 
     private static final String DB = "SELECT DATABASE()";
 
     private static final String ALL_TABLE = "SELECT TABLE_NAME tn, TABLE_COMMENT tc FROM information_schema.`TABLES` WHERE table_schema = ?";
 
-    private static final String SQL = "show create table %s";
+    private static final String SQL = "SHOW CREATE TABLE %s";
 
     private static final String ALL_COLUMN = "SELECT column_name cn, column_type ct, column_comment cc " +
             "FROM information_schema.`COLUMNS` WHERE table_schema = ? AND table_name = ? ORDER BY ordinal_position";
 
     private static final Map<String, String> TYPE_MAP = maps(
+            "tinyint(1)", "Boolean",
             "tinyint", "Integer",
             "bigint", "Long",
             "int", "Integer",
@@ -189,7 +193,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            if (TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType)) {
+                columnType = "tinyint(1)";
+            } else {
+                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            }
             String columnComment = toStr(column.get(COLUMN_COMMENT));
 
             sbd.append("\n");
@@ -203,6 +211,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 importSet.add("import com.fasterxml.jackson.annotation.JsonProperty;\n");
             }
             String fieldType = TYPE_MAP.get(columnType);
+            if (fieldType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
+            }
             sbd.append(tab(1)).append("private ").append(fieldType).append(" ").append(fieldName).append(";\n");
             if ("Date".equals(fieldType)) {
                 javaImportSet.add("import java.util.Date;\n");
@@ -247,7 +258,12 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            if (TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType)) {
+                columnType = "tinyint(1)";
+            } else {
+                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            }
+
             String columnComment = toStr(column.get(COLUMN_COMMENT));
 
             sbd.append("\n");
@@ -260,6 +276,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 importSet.add("import com.fasterxml.jackson.annotation.JsonProperty;\n");
             }
             String fieldType = TYPE_MAP.get(columnType);
+            if (fieldType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
+            }
             sbd.append(tab(1)).append("private ").append(fieldType).append(" ").append(fieldName).append(";\n");
             if ("Date".equals(fieldType)) {
                 javaImportSet.add("import java.util.Date;\n");
@@ -307,7 +326,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            if (TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType)) {
+                columnType = "tinyint(1)";
+            } else {
+                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            }
             String columnComment = toStr(column.get(COLUMN_COMMENT));
             columnComment = ("".equals(columnComment) ? "" : (" " + columnComment + " -->"));
 
@@ -324,7 +347,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     sbd.append(tab(1)).append(String.format("/**%s %s */\n", columnComment, columnName));
                 }
             }
-            sbd.append(tab(1)).append(String.format("private %s %s;\n", TYPE_MAP.get(columnType), fieldName));
+            String fieldType = TYPE_MAP.get(columnType);
+            if (fieldType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
+            }
+            sbd.append(tab(1)).append(String.format("private %s %s;\n", fieldType, fieldName));
         }
         String modelClass = toClass(tableName) + MODEL_SUFFIX;
         String content = String.format(MODEL, MODEL_PACKAGE, tableComment, tableName, tableName, modelClass, sbd);
@@ -395,7 +422,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
 
             sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
-            sbd.append(tab(5)).append(String.format("#{item.%s,jdbcType=%s},\n", toField(columnName), TYPE_DB_MAP.get(columnType)));
+            String jdbcType = TYPE_DB_MAP.get(columnType);
+            if (jdbcType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
+            }
+            sbd.append(tab(5)).append(String.format("#{item.%s,jdbcType=%s},\n", toField(columnName), jdbcType));
             sbd.append(tab(4)).append("</if>\n");
         }
 
@@ -413,9 +444,14 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             String columnType = toStr(column.get(COLUMN_TYPE));
             columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
 
+            String jdbcType = TYPE_DB_MAP.get(columnType);
+            if (jdbcType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
+            }
+
             sbd.append(String.format("%s<%s column=\"%s\" jdbcType=\"%s\" property=\"%s\" />\n",
                     tab(2), ("id".equals(columnName) ? "id" : "result"),
-                    toColumn(tableName, columnName, alias), TYPE_DB_MAP.get(columnType), toField(columnName)));
+                    toColumn(tableName, columnName, alias), jdbcType, toField(columnName)));
         }
         sbd.append(String.format("%s</resultMap>", tab(1)));
         return sbd.toString();
