@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
-@SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored"})
+@SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored", "SqlNoDataSourceInspection"})
 @ContextConfiguration("/context.xml")
 public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextTests {
 
@@ -50,8 +50,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final boolean TINYINT1_TO_BOOLEAN = false;
 
     // INSERT INTO t_xx(c1, c2) VALUES('1', '2') ON DUPLICATE KEY UPDATE c1 = VALUES(c1), c2 = VALUES(c2)
-    // 不加 VALUES 表示使用旧值, 加了表示使用新值, 8.0.20 之后 VALUES 不再推荐使用, 从 8.0.19 开始推荐下面的方式
+    // 使用 VALUES(c1) 表示使用新值, 8.0.20 之后 VALUES 不再推荐使用, 从 8.0.19 开始推荐下面的方式
     // INSERT INTO t_xx(c1, c2) VALUES('1', '2') AS new ON DUPLICATE KEY UPDATE c1 = new.c1, c2 = new.c2
+    // 见: https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
     private static final boolean GREATER_MYSQL8019 = false;
 
     // 上面是配置项, 下面的不用了
@@ -441,52 +442,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         return sbd.append(columnBuilder.toString().trim()).append("\n").append(tab(1)).append("</sql>").toString();
     }
-    private static String xmlBatch(String tableName, List<Map<String, Object>> columns) {
-        StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"batchInsert\" keyColumn=\"id\" keyProperty=\"id\" parameterType=\"map\" useGeneratedKeys=\"true\">\n");
-        sbd.append(tab(2)).append(String.format("INSERT INTO `%s` (\n", tableName));
-        sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
-        sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
-        sbd.append(tab(4)).append("<trim suffixOverrides=\",\">\n");
-        for (Map<String, Object> column : columns) {
-            String columnName = toStr(column.get(COLUMN_NAME));
-
-            sbd.append(tab(5)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
-            sbd.append(tab(6)).append(String.format("`%s`,\n", toColumn(null, columnName, false)));
-            sbd.append(tab(5)).append("</if>\n");
-        }
-        sbd.append(tab(4)).append("</trim>\n");
-        sbd.append(tab(3)).append("</if>\n");
-        sbd.append(tab(2)).append("</foreach>\n");
-        sbd.append(tab(2)).append(") values\n");
-        sbd.append(tab(2)).append("<foreach collection=\"list\" item=\"item\" separator=\",\">\n");
-        sbd.append(tab(3)).append("<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">\n");
-
-        for (Map<String, Object> column : columns) {
-            String columnName = toStr(column.get(COLUMN_NAME));
-            String columnType = toStr(column.get(COLUMN_TYPE));
-            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
-
-            sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
-            String jdbcType = TYPE_DB_MAP.get(columnType);
-            if (jdbcType == null) {
-                throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
-            }
-            sbd.append(tab(5)).append(String.format("#{item.%s,jdbcType=%s},\n", toField(columnName), jdbcType));
-            sbd.append(tab(4)).append("</if>\n");
-        }
-
-        sbd.append(tab(3)).append("</trim>\n");
-        sbd.append(tab(2)).append("</foreach>\n");
-        sbd.append(tab(1)).append("</insert>");
-        return sbd.toString();
-    }
     private static String xmlInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
-        String modelClassName = toClass(tableName) + MODEL_SUFFIX;
-
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" keyColumn=\"id\" keyProperty=\"id\" parameterType=\"");
-        sbd.append(modelClassName).append("\" useGeneratedKeys=\"true\">\n");
+        sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"").append(tableToModel(tableName)).append("\"\n");
+        sbd.append(tab(3)).append("keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
 
         sbd.append(tab(2)).append("<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">\n");
@@ -526,6 +485,42 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         sbd.append(tab(2)).append("</trim>\n");
 
+        sbd.append(tab(1)).append("</insert>");
+        return sbd.toString();
+    }
+    private static String xmlBatch(String tableName, List<Map<String, Object>> columns) {
+        StringBuilder sbd = new StringBuilder();
+        sbd.append(tab(1)).append("<insert id=\"batchInsert\" keyColumn=\"id\" keyProperty=\"id\" parameterType=\"map\" useGeneratedKeys=\"true\">\n");
+        sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
+        sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
+        sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
+        sbd.append(tab(4)).append("<trim prefix=\"(\" suffix=\") VALUES\" suffixOverrides=\",\">\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+
+            sbd.append(tab(5)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
+            sbd.append(tab(6)).append(String.format("`%s`,\n", toColumn(null, columnName, false)));
+            sbd.append(tab(5)).append("</if>\n");
+        }
+        sbd.append(tab(4)).append("</trim>\n");
+        sbd.append(tab(3)).append("</if>\n");
+        sbd.append("\n");
+        sbd.append(tab(3)).append("<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String columnType = toStr(column.get(COLUMN_TYPE));
+            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+
+            sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
+            String jdbcType = TYPE_DB_MAP.get(columnType);
+            if (jdbcType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
+            }
+            sbd.append(tab(5)).append(String.format("#{item.%s,jdbcType=%s},\n", toField(columnName), jdbcType));
+            sbd.append(tab(4)).append("</if>\n");
+        }
+        sbd.append(tab(3)).append("</trim>\n");
+        sbd.append(tab(2)).append("</foreach>\n");
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
