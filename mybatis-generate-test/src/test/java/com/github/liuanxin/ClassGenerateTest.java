@@ -49,11 +49,18 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     /** 是否把 tinyint(1) 映射成 Boolean */
     private static final boolean TINYINT1_TO_BOOLEAN = false;
 
-    // INSERT INTO t_xx(c1, c2) VALUES('1', '2') ON DUPLICATE KEY UPDATE c1 = VALUES(c1), c2 = VALUES(c2)
-    // 使用 VALUES(c1) 表示使用新值, 8.0.20 之后 VALUES 不再推荐使用, 从 8.0.19 开始推荐下面的方式
-    // INSERT INTO t_xx(c1, c2) VALUES('1', '2') AS new ON DUPLICATE KEY UPDATE c1 = new.c1, c2 = new.c2
-    // 见: https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-    private static final boolean GREATER_MYSQL8019 = false;
+    /**
+     * 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
+     *
+     * INSERT INTO t_xx(c1, c2) VALUES('1', '2') ON DUPLICATE KEY UPDATE c1 = VALUES(c1), c2 = VALUES(c2)
+     * 使用 VALUES(c1) 表示使用新值, 8.0.20 之后 VALUES 不再推荐使用, 从 8.0.19 开始推荐下面的方式
+     * INSERT INTO t_xx(c1, c2) VALUES('1', '2') AS new ON DUPLICATE KEY UPDATE c1 = new.c1, c2 = new.c2
+     *
+     * 如果是用 MariaDB 且版本 <= 10.3.2 也同样使用 VALUES, 版本 >= 10.3.3 则使用 VALUE
+     * 见: https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+     * 见: https://mariadb.com/kb/en/values-value/
+     */
+    private static final int DUPLICATE_TYPE = 0;
 
     // 上面是配置项, 下面的不用了
 
@@ -473,13 +480,21 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         sbd.append(tab(2)).append("</trim>\n");
 
-        String duplicate = GREATER_MYSQL8019 ? "AS new ON DUPLICATE KEY UPDATE" : "ON DUPLICATE KEY UPDATE";
+        String duplicate = (DUPLICATE_TYPE == 1) ? "AS new ON DUPLICATE KEY UPDATE" : "ON DUPLICATE KEY UPDATE";
         sbd.append(tab(2)).append(String.format("<trim prefix=\"%s\" suffixOverrides=\",\">\n", duplicate));
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             sbd.append(tab(3)).append(String.format("<if test=\"%s != null\">\n", toField(columnName)));
             String toColumn = toColumn(null, columnName, false);
-            String values = String.format(GREATER_MYSQL8019 ? "new.`%s`" : "VALUES(`%s`)", toColumn);
+            // 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
+            String values;
+            if (DUPLICATE_TYPE == 1) {
+                values = String.format("new.`%s`", toColumn);
+            } else if (DUPLICATE_TYPE == 2) {
+                values = String.format("VALUE(`%s`)", toColumn);
+            } else {
+                values = String.format("VALUES(`%s`)", toColumn);
+            }
             sbd.append(tab(4)).append(String.format("`%s` = %s,\n", toColumn, values));
             sbd.append(tab(3)).append("</if>\n");
         }
