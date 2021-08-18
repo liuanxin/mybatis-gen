@@ -123,24 +123,13 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> table : tables) {
             String tableName = toStr(table.get(TABLE_NAME));
             if (GENERATE_TABLES.contains(tableName)) {
-                tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-
                 String tableComment = toStr(table.get(TABLE_COMMENT));
                 System.out.printf("%s : %s\n", tableName, tableComment);
 
                 Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(SQL, tableName));
                 sbd.append(toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
                         .replace("ROW_FORMAT=DYNAMIC ", "")).append(";\n\n\n");
-
                 List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
-                /*
-                for (Map<String, Object> column : columns) {
-                    String columnName = toStr(column.get(COLUMN_NAME));
-                    String columnType = toStr(column.get(COLUMN_TYPE));
-                    String columnComment = toStr(column.get(COLUMN_COMMENT));
-                    System.out.printf("    字段: %s, 类型: %s, 字段注释: %s\n", columnName, columnType, columnComment);
-                }
-                */
 
                 feignReq(tableName, tableComment, columns);
                 feignRes(tableName, tableComment, columns);
@@ -239,10 +228,12 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, tableComment, toClass(tableName), sbd);
     }
     private static void req(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String content = reqAndRes(REQ_PACKAGE, tableName + "_req", tableComment + " -- 入参", columns);
         writeFile(new File(JAVA_PATH + REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
     private static void res(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String content = reqAndRes(RES_PACKAGE, tableName + "_res", tableComment + " -- 出参", columns);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
     }
@@ -304,10 +295,12 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         return String.format(FEIGN_REQ_RES, classPackage, noJavaJoin, javaJoin, tableComment, toClass(tableName), sbd);
     }
     private static void feignReq(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String content = feignReqAndRes(FEIGN_REQ_PACKAGE, tableName + "_req", tableComment + " -- feign 入参", columns);
         writeFile(new File(JAVA_PATH + FEIGN_REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
     private static void feignRes(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String content = feignReqAndRes(FEIGN_RES_PACKAGE, tableName + "_res", tableComment + " -- feign 出参", columns);
         writeFile(new File(JAVA_PATH + FEIGN_RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
     }
@@ -360,7 +353,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             }
             sbd.append(tab(1)).append(String.format("private %s %s;\n", fieldType, fieldName));
         }
-        String modelClass = toClass(tableName) + MODEL_SUFFIX;
+        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String modelClass = toClass(handleTableName) + MODEL_SUFFIX;
         String content = String.format(MODEL, MODEL_PACKAGE, tableComment, tableName, tableName, modelClass, sbd);
         writeFile(new File(JAVA_PATH + MODEL_PACKAGE.replace(".", "/"), modelClass + ".java"), content);
     }
@@ -383,9 +377,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "    int batchInsert(@Param(\"list\") List<%s> list);\n" +
             "}\n";
     private static void dao(String tableName, String tableComment) {
-        String daoClassName = toClass(tableName) + DAO_SUFFIX;
-        String modelClassName = toClass(tableName) + MODEL_SUFFIX;
-        String modelClassPath = tableToModel(tableName);
+        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
+        String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
+        String modelClassPath = tableToModel(handleTableName);
         String content = String.format(DAO, DAO_PACKAGE, modelClassPath, tableComment, tableName,
                 daoClassName, modelClassName, modelClassName, modelClassName);
         writeFile(new File(JAVA_PATH + DAO_PACKAGE.replace(".", "/"), daoClassName + ".java"), content);
@@ -408,6 +403,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         writeFile(new File(XML_PATH, toClass(tableName) + ".xml"), content);
     }
     private static String xmlMap(String tableName, boolean alias, List<Map<String, Object>> columns) {
+        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append(String.format("%s<resultMap id=\"%s\" type=\"%s\">\n",
                 tab(1), tableToResultMap(tableName, alias), tableToModel(tableName)));
@@ -429,6 +425,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         return sbd.toString();
     }
     private static String xmlSql(String tableName, boolean alias, List<Map<String, Object>> columns) {
+        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append(String.format("%s<sql id=\"%s\">\n%s", tab(1), tableToSql(tableName, alias), tab(2)));
         StringBuilder columnBuilder = new StringBuilder();
@@ -450,8 +447,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         return sbd.append(columnBuilder.toString().trim()).append("\n").append(tab(1)).append("</sql>").toString();
     }
     private static String xmlInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
+        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"").append(tableToModel(tableName)).append("\"\n");
+        sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"").append(tableToModel(handleTableName)).append("\"\n");
         sbd.append(tab(3)).append("keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
 
@@ -598,7 +596,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "    }\n" +
             "}\n";
     private static void service(String tableName) {
-        // 18 个
+        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + DAO_SUFFIX)
                 .replace("$$entity$$", toClass(tableName) + MODEL_SUFFIX);
         String content = String.format(serviceInfo,
