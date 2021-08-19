@@ -414,6 +414,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 xmlInsertOrUpdate(tableName, columns) + "\n" +
                 "\n" +
                 xmlBatchInsert(tableName, columns) + "\n" +
+                "\n" +
                 xmlBatchReplace(tableName, columns) + "\n" +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + ".xml"), content);
