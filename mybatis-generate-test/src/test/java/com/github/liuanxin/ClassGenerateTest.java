@@ -387,6 +387,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "    int insertOrUpdate(%s record);\n" +
             "\n" +
             "    int batchInsert(@Param(\"list\") List<%s> list);\n" +
+            "\n" +
             "    int batchReplace(@Param(\"list\") List<%s> list);\n" +
             "}\n";
     private static void dao(String tableName, String tableComment) {
