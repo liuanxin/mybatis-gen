@@ -23,6 +23,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     /** 生成 java 文件的包名 */
     private static final String PACKAGE = "com.github.xxx";
+    private static final String FEIGN_PACKAGE = PACKAGE + ".feign";
 
     /** 要生成代码的表名 */
     private static final Set<String> GENERATE_TABLES = Sets.newHashSet(Arrays.asList(
@@ -34,8 +35,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String JAVA_PATH = SAVE_PATH + "java/";
     private static final String XML_PATH = SAVE_PATH + "resource/mapper/";
 
-    private static final String FEIGN_REQ_PACKAGE = PACKAGE + ".feign.req";
-    private static final String FEIGN_RES_PACKAGE = PACKAGE + ".feign.res";
+    private static final String FEIGN_REQ_PACKAGE = FEIGN_PACKAGE + ".req";
+    private static final String FEIGN_RES_PACKAGE = FEIGN_PACKAGE + ".res";
     private static final String REQ_PACKAGE = PACKAGE + ".req";
     private static final String RES_PACKAGE = PACKAGE + ".res";
     private static final String MODEL_PACKAGE = PACKAGE + ".entity";
@@ -69,10 +70,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static final String ALL_TABLE = "SELECT TABLE_NAME tn, TABLE_COMMENT tc FROM information_schema.`TABLES` WHERE table_schema = ?";
 
-    private static final String SQL = "SHOW CREATE TABLE %s";
-
     private static final String ALL_COLUMN = "SELECT column_name cn, column_type ct, column_comment cc " +
             "FROM information_schema.`COLUMNS` WHERE table_schema = ? AND table_name = ? ORDER BY ordinal_position";
+
+    private static final String CREATE_SQL = "SHOW CREATE TABLE %s";
 
     private static final Map<String, String> TYPE_MAP = maps(
             "tinyint(1)", "Boolean",
@@ -126,7 +127,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 String tableComment = toStr(table.get(TABLE_COMMENT));
                 System.out.printf("%s : %s\n", tableName, tableComment);
 
-                Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(SQL, tableName));
+                Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
                 sbd.append(toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
                         .replace("ROW_FORMAT=DYNAMIC ", "")).append(";\n\n\n");
                 List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
@@ -307,12 +308,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static final String MODEL = "package %s;\n" +
             "\n" +
-            "import com.baomidou.mybatisplus.annotation.TableName;\n" +
-            "import lombok.Data;\n" +
-            "\n" +
-            "import java.io.Serializable;\n" +
-            "import java.math.BigDecimal;\n" +
-            "import java.util.Date;\n" +
+            "%s\n" +
+            "%s" +
             "\n" +
             "/** %s --> %s */\n" +
             "@Data\n" +
@@ -322,6 +319,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "%s" +
             "}\n";
     private static void model(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        Set<String> importSet = Sets.newHashSet("import com.baomidou.mybatisplus.annotation.TableName;\n", "import lombok.Data;\n");
+        Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
         StringBuilder sbd = new StringBuilder();
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
@@ -352,10 +351,23 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
             }
             sbd.append(tab(1)).append(String.format("private %s %s;\n", fieldType, fieldName));
+            if ("Date".equals(fieldType)) {
+                javaImportSet.add("import java.util.Date;\n");
+            } else if ("BigDecimal".equals(fieldType)) {
+                javaImportSet.add("import java.math.BigDecimal;\n");
+            }
         }
+
+        List<String> noJavaList = Lists.newArrayList(importSet);
+        Collections.sort(noJavaList);
+        String noJavaJoin = Joiner.on("").join(noJavaList);
+
+        List<String> javaList = Lists.newArrayList(javaImportSet);
+        Collections.sort(javaList);
+        String javaJoin = Joiner.on("").join(javaList);
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String modelClass = toClass(handleTableName) + MODEL_SUFFIX;
-        String content = String.format(MODEL, MODEL_PACKAGE, tableComment, tableName, tableName, modelClass, sbd);
+        String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, tableComment, tableName, tableName, modelClass, sbd);
         writeFile(new File(JAVA_PATH + MODEL_PACKAGE.replace(".", "/"), modelClass + ".java"), content);
     }
 
@@ -375,6 +387,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "    int insertOrUpdate(%s record);\n" +
             "\n" +
             "    int batchInsert(@Param(\"list\") List<%s> list);\n" +
+            "    int batchReplace(@Param(\"list\") List<%s> list);\n" +
             "}\n";
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
@@ -382,28 +395,29 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
         String modelClassPath = tableToModel(handleTableName);
         String content = String.format(DAO, DAO_PACKAGE, modelClassPath, tableComment, tableName,
-                daoClassName, modelClassName, modelClassName, modelClassName);
+                daoClassName, modelClassName, modelClassName, modelClassName, modelClassName);
         writeFile(new File(JAVA_PATH + DAO_PACKAGE.replace(".", "/"), daoClassName + ".java"), content);
     }
 
     private static void xml(String tableName, List<Map<String, Object>> columns) {
+        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
-                String.format("<mapper namespace=\"%s\">\n", tableToDao(tableName)) +
-                xmlMap(tableName, false, columns) + "\n" +
-                xmlMap(tableName, true, columns) + "\n" +
+                String.format("<mapper namespace=\"%s\">\n", tableToDao(handleTableName)) +
+                xmlMap(handleTableName, false, columns) + "\n" +
+                xmlMap(handleTableName, true, columns) + "\n" +
                 "\n" +
-                xmlSql(tableName, false, columns) + "\n" +
-                xmlSql(tableName, true, columns) + "\n" +
+                xmlSql(handleTableName, false, columns) + "\n" +
+                xmlSql(handleTableName, true, columns) + "\n" +
                 "\n" +
                 xmlInsertOrUpdate(tableName, columns) + "\n" +
                 "\n" +
-                xmlBatch(tableName, columns) + "\n" +
+                xmlBatchInsert(tableName, columns) + "\n" +
+                xmlBatchReplace(tableName, columns) + "\n" +
                 "</mapper>\n";
-        writeFile(new File(XML_PATH, toClass(tableName) + ".xml"), content);
+        writeFile(new File(XML_PATH, toClass(handleTableName) + ".xml"), content);
     }
     private static String xmlMap(String tableName, boolean alias, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append(String.format("%s<resultMap id=\"%s\" type=\"%s\">\n",
                 tab(1), tableToResultMap(tableName, alias), tableToModel(tableName)));
@@ -425,7 +439,6 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         return sbd.toString();
     }
     private static String xmlSql(String tableName, boolean alias, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append(String.format("%s<sql id=\"%s\">\n%s", tab(1), tableToSql(tableName, alias), tab(2)));
         StringBuilder columnBuilder = new StringBuilder();
@@ -449,7 +462,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static String xmlInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"").append(tableToModel(handleTableName)).append("\"\n");
+        sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"");
+        sbd.append(tableToModel(handleTableName)).append("\"\n");
         sbd.append(tab(3)).append("keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
 
@@ -501,10 +515,46 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
-    private static String xmlBatch(String tableName, List<Map<String, Object>> columns) {
+    private static String xmlBatchInsert(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
         sbd.append(tab(1)).append("<insert id=\"batchInsert\" keyColumn=\"id\" keyProperty=\"id\" parameterType=\"map\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
+        sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
+        sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
+        sbd.append(tab(4)).append("<trim prefix=\"(\" suffix=\") VALUES\" suffixOverrides=\",\">\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+
+            sbd.append(tab(5)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
+            sbd.append(tab(6)).append(String.format("`%s`,\n", toColumn(null, columnName, false)));
+            sbd.append(tab(5)).append("</if>\n");
+        }
+        sbd.append(tab(4)).append("</trim>\n");
+        sbd.append(tab(3)).append("</if>\n");
+        sbd.append("\n");
+        sbd.append(tab(3)).append("<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String columnType = toStr(column.get(COLUMN_TYPE));
+            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+
+            sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
+            String jdbcType = TYPE_DB_MAP.get(columnType);
+            if (jdbcType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
+            }
+            sbd.append(tab(5)).append(String.format("#{item.%s,jdbcType=%s},\n", toField(columnName), jdbcType));
+            sbd.append(tab(4)).append("</if>\n");
+        }
+        sbd.append(tab(3)).append("</trim>\n");
+        sbd.append(tab(2)).append("</foreach>\n");
+        sbd.append(tab(1)).append("</insert>");
+        return sbd.toString();
+    }
+    private static String xmlBatchReplace(String tableName, List<Map<String, Object>> columns) {
+        StringBuilder sbd = new StringBuilder();
+        sbd.append(tab(1)).append("<insert id=\"batchReplace\" keyColumn=\"id\" keyProperty=\"id\" parameterType=\"map\" useGeneratedKeys=\"true\">\n");
+        sbd.append(tab(2)).append(String.format("REPLACE INTO `%s`\n", tableName));
         sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
         sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
         sbd.append(tab(4)).append("<trim prefix=\"(\" suffix=\") VALUES\" suffixOverrides=\",\">\n");
@@ -558,20 +608,30 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "    \n" +
             "    private final %s $$var$$;\n" +
             "\n" +
-            "    @Transactional(rollbackFor = Exception.class)\n" +
+            "    @Transactional\n" +
             "    public int add($$entity$$ record) {\n" +
-            "        record.setId(IdWorker.getId());\n" +
             "        return $$var$$.insert(record);\n" +
             "    }\n" +
-            "    @Transactional(rollbackFor = Exception.class)\n" +
-            "    public int batchAdd(List<$$entity$$> list) {\n" +
+            "\n" +
+            "    @Transactional\n" +
+            "    public int addBatch(List<$$entity$$> list) {\n" +
             "        if (list == null || list.size() == 0) {\n" +
             "            return 0;\n" +
             "        }\n" +
-            "        for ($$entity$$ record : list) {\n" +
-            "            record.setId(IdWorker.getId());\n" +
-            "        }\n" +
             "        return $$var$$.batchInsert(list);\n" +
+            "    }\n" +
+            "\n" +
+            "    @Transactional\n" +
+            "    public int replaceBatch(List<$$entity$$> list) {\n" +
+            "        if (list == null || list.size() == 0) {\n" +
+            "            return 0;\n" +
+            "        }\n" +
+            "        return $$var$$.batchReplace(list);\n" +
+            "    }\n" +
+            "\n" +
+            "    @Transactional\n" +
+            "    public int addOrUpdate($$entity$$ record) {\n" +
+            "        return $$var$$.insertOrUpdate(record);\n" +
             "    }\n" +
             "\n" +
             "    @Transactional\n" +
