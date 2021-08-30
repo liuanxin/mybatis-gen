@@ -123,13 +123,13 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         StringBuilder sbd = new StringBuilder();
         for (Map<String, Object> table : tables) {
             String tableName = toStr(table.get(TABLE_NAME));
+
+            Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
+            sbd.append(toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
+                    .replace("ROW_FORMAT=DYNAMIC ", "")).append(";\n\n\n");
             if (GENERATE_TABLES.contains(tableName)) {
                 String tableComment = toStr(table.get(TABLE_COMMENT));
                 System.out.printf("%s : %s\n", tableName, tableComment);
-
-                Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
-                sbd.append(toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
-                        .replace("ROW_FORMAT=DYNAMIC ", "")).append(";\n\n\n");
                 List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
 
                 feignReq(tableName, tableComment, columns);
