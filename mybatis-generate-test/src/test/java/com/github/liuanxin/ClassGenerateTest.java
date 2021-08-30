@@ -607,7 +607,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "@RequiredArgsConstructor\n" +
             "@Service\n" +
             "public class %s {\n" +
-            "    \n" +
+            "\n" +
             "    private final %s $$var$$;\n" +
             "\n" +
             "    @Transactional\n" +
