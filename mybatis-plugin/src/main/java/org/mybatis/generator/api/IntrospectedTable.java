@@ -804,7 +804,13 @@ public abstract class IntrospectedTable {
         sb.append(calculateJavaClientInterfacePackage());
         sb.append('.');
         sb.append(fullyQualifiedTable.getDomainObjectName());
-        sb.append("Mapper"); //$NON-NLS-1$
+        //sb.append("Mapper"); //$NON-NLS-1$
+        /*
+        if (sb.toString().endsWith("Entity")) {
+            sb.delete(sb.length() - 6, sb.length());
+        }
+        */
+        sb.append("Dao"); //$NON-NLS-1$
         setMyBatis3JavaMapperType(sb.toString());
 
         sb.setLength(0);
