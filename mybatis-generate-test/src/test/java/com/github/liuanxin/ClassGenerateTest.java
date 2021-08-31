@@ -63,6 +63,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
      */
     private static final int DUPLICATE_TYPE = 0;
 
+    /** true 表示收集所有表的 sql */
+    private static final boolean COLLECT_ALL_SQL = true;
+
     // 上面是配置项, 下面的不用了
 
 
@@ -125,9 +128,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             String tableName = toStr(table.get(TABLE_NAME));
 
             Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
-            sbd.append(toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
-                    .replace("ROW_FORMAT=DYNAMIC ", "")).append(";\n\n\n");
+            String createSql = toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
+                    .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ").replace("ROW_FORMAT=DYNAMIC ", "");
             if (GENERATE_TABLES.contains(tableName)) {
+                sbd.append(createSql).append(";\n\n\n");
+
                 String tableComment = toStr(table.get(TABLE_COMMENT));
                 System.out.printf("%s : %s\n", tableName, tableComment);
                 List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
@@ -141,6 +146,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 dao(tableName, tableComment);
                 xml(tableName, columns);
                 System.out.println("========================================");
+            } else if (COLLECT_ALL_SQL) {
+                sbd.append(createSql).append(";\n\n\n");
             }
         }
         writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + sbd.toString().trim() + "\n");
