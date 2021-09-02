@@ -66,6 +66,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     /** true 表示收集所有表的 sql */
     private static final boolean COLLECT_ALL_SQL = true;
 
+    /** true 表示收集所有的数据字典 */
+    private static final boolean COLLECT_ALL_DB_DICT = true;
+
     // 上面是配置项, 下面的不用了
 
 
@@ -73,7 +76,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static final String ALL_TABLE = "SELECT TABLE_NAME tn, TABLE_COMMENT tc FROM information_schema.`TABLES` WHERE table_schema = ?";
 
-    private static final String ALL_COLUMN = "SELECT column_name cn, column_type ct, column_comment cc " +
+    private static final String ALL_COLUMN = "SELECT column_name cn, column_type ct, column_comment cc, is_nullable ie, column_key ck " +
             "FROM information_schema.`COLUMNS` WHERE table_schema = ? AND table_name = ? ORDER BY ordinal_position";
 
     private static final String CREATE_SQL = "SHOW CREATE TABLE %s";
@@ -114,6 +117,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String COLUMN_NAME = "cn";
     private static final String COLUMN_TYPE = "ct";
     private static final String COLUMN_COMMENT = "cc";
+    private static final String IS_NULLABLE = "ie";
+    private static final String COLUMN_KEY = "ck";
 
     private static final int WRAP_COUNT = 5;
     private static final int ALIAS_WRAP_COUNT = 2;
@@ -123,19 +128,22 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         deleteDirectory(new File(SAVE_PATH));
         String dbName = jdbcTemplate.queryForObject(DB, String.class);
         List<Map<String, Object>> tables = jdbcTemplate.queryForList(ALL_TABLE, dbName);
-        StringBuilder sbd = new StringBuilder();
+        StringBuilder dbSbd = new StringBuilder();
+        StringBuilder mdSbd = new StringBuilder();
         for (Map<String, Object> table : tables) {
             String tableName = toStr(table.get(TABLE_NAME));
+            String tableComment = toStr(table.get(TABLE_COMMENT));
+            System.out.printf("%s : %s\n", tableName, tableComment);
+            List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
 
             Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
             String createSql = toStr(sqlMap.get("Create Table")).replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ").replace("ROW_FORMAT=DYNAMIC ", "");
-            if (GENERATE_TABLES.contains(tableName)) {
-                sbd.append(createSql).append(";\n\n\n");
 
-                String tableComment = toStr(table.get(TABLE_COMMENT));
-                System.out.printf("%s : %s\n", tableName, tableComment);
-                List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
+            String dbDict = generateDbDict(tableName, tableComment, columns);
+            if (GENERATE_TABLES.contains(tableName)) {
+                dbSbd.append(createSql).append(";\n\n\n");
+                mdSbd.append(dbDict).append("\n\n");
 
                 feignReq(tableName, tableComment, columns);
                 feignRes(tableName, tableComment, columns);
@@ -146,11 +154,17 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 dao(tableName, tableComment);
                 xml(tableName, columns);
                 System.out.println("========================================");
-            } else if (COLLECT_ALL_SQL) {
-                sbd.append(createSql).append(";\n\n\n");
+            } else {
+                if (COLLECT_ALL_SQL) {
+                    dbSbd.append(createSql).append(";\n\n\n");
+                }
+                if (COLLECT_ALL_DB_DICT) {
+                    mdSbd.append(dbDict).append("\n\n");
+                }
             }
         }
-        writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + sbd.toString().trim() + "\n");
+        writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
+        writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.toString().trim() + "\n");
     }
 
     private static void deleteDirectory(File dir) {
@@ -160,7 +174,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 deleteDirectory(file);
             }
         }
-        dir.delete();
+        boolean flag = dir.delete();
+        if (!flag) {
+            System.err.printf("文件(%s)删除失败%n", dir);
+        }
     }
 
     private static void writeFile(File file, String content) {
@@ -177,6 +194,26 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String generateDbDict(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        StringBuilder sbd = new StringBuilder();
+        sbd.append(tableName).append("(`").append(tableComment).append("`)\n\n");
+        sbd.append("| 字段名 | 字段类型 | 是否可空 | 是否主键 | 字段说明 |\n");
+        sbd.append("| ----- | ------- | ------- | ------- | ------- |\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String columnType = toStr(column.get(COLUMN_TYPE));
+            String isNullable = toStr(column.get(IS_NULLABLE));
+            String columnKey = toStr(column.get(COLUMN_KEY));
+            String columnComment = toStr(column.get(COLUMN_COMMENT));
+            sbd.append("| ").append(columnName)
+                    .append(" | ").append(columnType)
+                    .append(" | ").append("yes".equalsIgnoreCase(isNullable) ? "是" : "否")
+                    .append(" | ").append("pri".equalsIgnoreCase(columnKey) ? "是" : "否")
+                    .append(" | ").append(columnComment).append("|\n");
+        }
+        return sbd.toString();
     }
 
     private static final String REQ_RES = "package %s;\n" +
