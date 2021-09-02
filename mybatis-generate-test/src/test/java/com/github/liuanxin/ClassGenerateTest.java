@@ -202,7 +202,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         StringBuilder sbd = new StringBuilder();
         sbd.append(tableName).append("(`").append(tableComment).append("`)\n\n");
         sbd.append("| 字段名 | 字段类型 | 是否可空 | 字段说明 |\n");
-        sbd.append("| :---- | :------ | :------ | :------ |\n");
+        sbd.append("| :---- | :------ | :------ |:------ |\n");
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
@@ -216,7 +216,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             }
             sbd.append("| ").append(columnName)
                     .append(" | ").append(columnType)
-                    .append(" | ").append("yes".equalsIgnoreCase(isNullable) ? "是" : "否")
+                    .append(" | ").append("yes".equalsIgnoreCase(isNullable) ? "✔" : "✘")
                     .append(" | ").append(comment).append(" |\n");
         }
         return sbd.toString();
