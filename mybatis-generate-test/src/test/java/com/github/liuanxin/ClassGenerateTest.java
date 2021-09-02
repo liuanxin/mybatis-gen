@@ -168,15 +168,17 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
 
     private static void deleteDirectory(File dir) {
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                deleteDirectory(file);
+        if (dir.exists()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteDirectory(file);
+                }
             }
-        }
-        boolean flag = dir.delete();
-        if (!flag) {
-            System.err.printf("文件(%s)删除失败%n", dir);
+            boolean flag = dir.delete();
+            if (!flag) {
+                System.err.printf("文件(%s)删除失败%n", dir);
+            }
         }
     }
 
@@ -199,19 +201,23 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static String generateDbDict(String tableName, String tableComment, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
         sbd.append(tableName).append("(`").append(tableComment).append("`)\n\n");
-        sbd.append("| 字段名 | 字段类型 | 是否可空 | 是否主键 | 字段说明 |\n");
-        sbd.append("| ----- | ------- | ------- | ------- | ------- |\n");
+        sbd.append("| 字段名 | 字段类型 | 是否可空 | 字段说明 |\n");
+        sbd.append("| :---- | :------ | :------ | :------ |\n");
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
             String isNullable = toStr(column.get(IS_NULLABLE));
-            String columnKey = toStr(column.get(COLUMN_KEY));
             String columnComment = toStr(column.get(COLUMN_COMMENT));
+            String comment;
+            if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
+                comment = "主键" + ("".equals(columnComment) ? "" : String.format("(%s)", columnComment));
+            } else {
+                comment = columnComment;
+            }
             sbd.append("| ").append(columnName)
                     .append(" | ").append(columnType)
                     .append(" | ").append("yes".equalsIgnoreCase(isNullable) ? "是" : "否")
-                    .append(" | ").append("pri".equalsIgnoreCase(columnKey) ? "是" : "否")
-                    .append(" | ").append(columnComment).append("|\n");
+                    .append(" | ").append(comment).append(" |\n");
         }
         return sbd.toString();
     }
