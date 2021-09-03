@@ -250,10 +250,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            if (TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType)) {
-                columnType = "tinyint(1)";
-            } else {
-                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            if (!(TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType))) {
+                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
             }
             String columnComment = toStr(column.get(COLUMN_COMMENT));
 
@@ -267,7 +265,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 sbd.append(tab(1)).append("@JsonProperty(\"").append(columnName).append("\")\n");
                 importSet.add("import com.fasterxml.jackson.annotation.JsonProperty;\n");
             }
-            String fieldType = TYPE_MAP.get(columnType);
+            String fieldType = TYPE_MAP.get(columnType.toLowerCase());
             if (fieldType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
             }
@@ -319,10 +317,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            if (TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType)) {
-                columnType = "tinyint(1)";
-            } else {
-                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            if (!(TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType))) {
+                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
             }
 
             String columnComment = toStr(column.get(COLUMN_COMMENT));
@@ -336,7 +332,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 sbd.append(tab(1)).append("@JsonProperty(\"").append(columnName).append("\")\n");
                 importSet.add("import com.fasterxml.jackson.annotation.JsonProperty;\n");
             }
-            String fieldType = TYPE_MAP.get(columnType);
+            String fieldType = TYPE_MAP.get(columnType.toLowerCase());
             if (fieldType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
             }
@@ -389,10 +385,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            if (TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType)) {
-                columnType = "tinyint(1)";
-            } else {
-                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            if (!(TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType))) {
+                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
             }
             String columnComment = toStr(column.get(COLUMN_COMMENT));
             columnComment = ("".equals(columnComment) ? "" : (" " + columnComment + " -->"));
@@ -410,7 +404,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     sbd.append(tab(1)).append(String.format("/**%s %s */\n", columnComment, columnName));
                 }
             }
-            String fieldType = TYPE_MAP.get(columnType);
+            String fieldType = TYPE_MAP.get(columnType.toLowerCase());
             if (fieldType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
             }
