@@ -474,7 +474,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "\n" +
             "    int insertOrUpdate(%s record);\n" +
             "\n" +
-            "    int batchInsertOrUpdate(@Param(\"list\") List<%s> record);\n" +
+            "    int batchInsertOrUpdate(@Param(\"list\") List<%s> list);\n" +
             "}\n";
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
@@ -607,7 +607,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" keyColumn=\"id\" keyProperty=\"id\"" +
                 " parameterType=\"map\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
-        sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
+        sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\" separator=\",\">\n");
         sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
         sbd.append(tab(4)).append("<trim prefix=\"(\" suffix=\") VALUES\" suffixOverrides=\",\">\n");
         for (Map<String, Object> column : columns) {
@@ -641,7 +641,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(4)).append(String.format("<trim prefix=\"%s\" suffixOverrides=\",\">\n", duplicate));
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
-            sbd.append(tab(5)).append(String.format("<if test=\"%s != null\">\n", toField(columnName)));
+            sbd.append(tab(5)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
             String toColumn = toColumn(null, columnName, false);
             // 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
             String values;
