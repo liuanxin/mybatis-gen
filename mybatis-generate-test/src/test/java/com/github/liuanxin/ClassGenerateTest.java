@@ -604,7 +604,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
     private static String xmlBatchInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" keyColumn=\"id\" keyProperty=\"id\" parameterType=\"map\" useGeneratedKeys=\"true\">\n");
+        sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" keyColumn=\"id\" keyProperty=\"id\"" +
+                " parameterType=\"map\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
         sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
         sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
@@ -634,13 +635,13 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             sbd.append(tab(4)).append("</if>\n");
         }
         sbd.append(tab(3)).append("</trim>\n");
-        sbd.append(tab(2)).append("</foreach>\n");
-
+        sbd.append("\n");
         String duplicate = (DUPLICATE_TYPE == 1) ? "AS new ON DUPLICATE KEY UPDATE" : "ON DUPLICATE KEY UPDATE";
-        sbd.append(tab(2)).append(String.format("<trim prefix=\"%s\" suffixOverrides=\",\">\n", duplicate));
+        sbd.append(tab(3)).append("<if test=\"(index + 1) == list.size\">\n");
+        sbd.append(tab(4)).append(String.format("<trim prefix=\"%s\" suffixOverrides=\",\">\n", duplicate));
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
-            sbd.append(tab(3)).append(String.format("<if test=\"%s != null\">\n", toField(columnName)));
+            sbd.append(tab(5)).append(String.format("<if test=\"%s != null\">\n", toField(columnName)));
             String toColumn = toColumn(null, columnName, false);
             // 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
             String values;
@@ -651,10 +652,13 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             } else {
                 values = String.format("VALUES(`%s`)", toColumn);
             }
-            sbd.append(tab(4)).append(String.format("`%s` = %s,\n", toColumn, values));
-            sbd.append(tab(3)).append("</if>\n");
+            sbd.append(tab(6)).append(String.format("`%s` = %s,\n", toColumn, values));
+            sbd.append(tab(5)).append("</if>\n");
         }
-        sbd.append(tab(2)).append("</trim>\n");
+        sbd.append(tab(4)).append("</trim>\n");
+        sbd.append(tab(3)).append("</if>\n");
+
+        sbd.append(tab(2)).append("</foreach>\n");
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
