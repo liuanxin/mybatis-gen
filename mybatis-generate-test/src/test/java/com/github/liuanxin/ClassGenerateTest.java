@@ -474,7 +474,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "\n" +
             "    int insertOrUpdate(%s record);\n" +
             "\n" +
-            "    int batchInsertOrUpdate(List<%s> record);\n" +
+            "    int batchInsertOrUpdate(@Param(\"list\") List<%s> record);\n" +
             "}\n";
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
