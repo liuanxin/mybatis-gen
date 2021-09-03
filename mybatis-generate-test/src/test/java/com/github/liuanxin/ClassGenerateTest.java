@@ -511,9 +511,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
 
-            String jdbcType = TYPE_DB_MAP.get(columnType);
+            String jdbcType = TYPE_DB_MAP.get(columnType.toLowerCase());
             if (jdbcType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
             }
@@ -567,10 +567,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
 
             sbd.append(tab(3)).append(String.format("<if test=\"%s != null\">\n", toField(columnName)));
-            String jdbcType = TYPE_DB_MAP.get(columnType);
+            String jdbcType = TYPE_DB_MAP.get(columnType.toLowerCase());
             if (jdbcType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
             }
@@ -623,10 +623,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
-            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType).toLowerCase();
+            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
 
             sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
-            String jdbcType = TYPE_DB_MAP.get(columnType);
+            String jdbcType = TYPE_DB_MAP.get(columnType.toLowerCase());
             if (jdbcType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
             }
