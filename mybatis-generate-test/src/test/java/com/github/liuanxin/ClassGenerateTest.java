@@ -141,7 +141,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ").replace("ROW_FORMAT=DYNAMIC ", "");
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
-            if (GENERATE_TABLES.contains(tableName)) {
+            if (GENERATE_TABLES.isEmpty() || GENERATE_TABLES.contains(tableName)) {
                 dbSbd.append(createSql).append(";\n\n\n");
                 mdSbd.append(dbDict).append("\n\n");
 
