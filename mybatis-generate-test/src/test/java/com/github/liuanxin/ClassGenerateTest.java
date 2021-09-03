@@ -130,10 +130,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         List<Map<String, Object>> tables = jdbcTemplate.queryForList(ALL_TABLE, dbName);
         StringBuilder dbSbd = new StringBuilder();
         StringBuilder mdSbd = new StringBuilder("### 数据库字典\n\n");
+        System.out.println("========================================");
         for (Map<String, Object> table : tables) {
             String tableName = toStr(table.get(TABLE_NAME));
             String tableComment = toStr(table.get(TABLE_COMMENT));
-            System.out.printf("%s : %s\n", tableName, tableComment);
             List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
 
             Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
@@ -142,6 +142,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
             if (GENERATE_TABLES.isEmpty() || GENERATE_TABLES.contains(tableName)) {
+                System.out.printf("%s : %s\n", tableName, tableComment);
                 dbSbd.append(createSql).append(";\n\n\n");
                 mdSbd.append(dbDict).append("\n\n");
 
@@ -165,6 +166,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
         writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.toString().trim() + "\n");
+        System.out.println("========================================");
     }
 
     private static void deleteDirectory(File dir) {
@@ -177,7 +179,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             }
             boolean flag = dir.delete();
             if (!flag) {
-                System.err.printf("文件(%s)删除失败%n", dir);
+                throw new RuntimeException(String.format("文件(%s)删除失败", dir));
             }
         }
     }
@@ -288,12 +290,14 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
     private static void req(String tableName, String tableComment, List<Map<String, Object>> columns) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String content = reqAndRes(REQ_PACKAGE, tableName + "_req", tableComment + " -- 入参", columns);
+        String comment = tableComment == null || tableComment.trim().isEmpty() ? "入参" : (tableComment + " -- 入参");
+        String content = reqAndRes(REQ_PACKAGE, tableName + "_req", comment, columns);
         writeFile(new File(JAVA_PATH + REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
     private static void res(String tableName, String tableComment, List<Map<String, Object>> columns) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String content = reqAndRes(RES_PACKAGE, tableName + "_res", tableComment + " -- 出参", columns);
+        String comment = tableComment == null || tableComment.trim().isEmpty() ? "出参" : (tableComment + " -- 出参");
+        String content = reqAndRes(RES_PACKAGE, tableName + "_res", comment, columns);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
     }
 
@@ -355,13 +359,15 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
     private static void feignReq(String tableName, String tableComment, List<Map<String, Object>> columns) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String content = feignReqAndRes(FEIGN_REQ_PACKAGE, tableName + "_req", tableComment + " -- feign 入参", columns);
-        writeFile(new File(JAVA_PATH + FEIGN_REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
+        String comment = tableComment == null || tableComment.trim().isEmpty() ? "feign 入参" : (tableComment + " -- feign 入参");
+        String content = feignReqAndRes(FEIGN_REQ_PACKAGE, tableName + "_feign_req", comment, columns);
+        writeFile(new File(JAVA_PATH + FEIGN_REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_req") + ".java"), content);
     }
     private static void feignRes(String tableName, String tableComment, List<Map<String, Object>> columns) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String content = feignReqAndRes(FEIGN_RES_PACKAGE, tableName + "_res", tableComment + " -- feign 出参", columns);
-        writeFile(new File(JAVA_PATH + FEIGN_RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
+        String comment = tableComment == null || tableComment.trim().isEmpty() ? "feign 出参" : (tableComment + " -- feign 出参");
+        String content = feignReqAndRes(FEIGN_RES_PACKAGE, tableName + "_feign_res", comment, columns);
+        writeFile(new File(JAVA_PATH + FEIGN_RES_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_res") + ".java"), content);
     }
 
     private static final String MODEL = "package %s;\n" +
