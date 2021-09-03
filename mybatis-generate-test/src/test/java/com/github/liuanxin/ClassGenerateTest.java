@@ -129,7 +129,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         String dbName = jdbcTemplate.queryForObject(DB, String.class);
         List<Map<String, Object>> tables = jdbcTemplate.queryForList(ALL_TABLE, dbName);
         StringBuilder dbSbd = new StringBuilder();
-        StringBuilder mdSbd = new StringBuilder();
+        StringBuilder mdSbd = new StringBuilder("### 数据库字典\n\n");
         for (Map<String, Object> table : tables) {
             String tableName = toStr(table.get(TABLE_NAME));
             String tableComment = toStr(table.get(TABLE_COMMENT));
@@ -200,7 +200,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static String generateDbDict(String tableName, String tableComment, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
-        sbd.append("\n-----\n").append(tableName);
+        sbd.append("#### ").append(tableName);
         if (tableComment != null && !tableComment.trim().isEmpty()) {
             sbd.append("(`").append(tableComment).append("`)");
         }
