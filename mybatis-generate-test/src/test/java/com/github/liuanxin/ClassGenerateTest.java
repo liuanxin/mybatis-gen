@@ -200,7 +200,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static String generateDbDict(String tableName, String tableComment, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tableName).append("(`").append(tableComment).append("`)\n\n");
+        sbd.append("\n-----\n").append(tableName);
+        if (tableComment != null && !tableComment.trim().isEmpty()) {
+            sbd.append("(`").append(tableComment).append("`)");
+        }
+        sbd.append("\n\n");
         sbd.append("| 字段名 | 字段类型 | 是否可空 | 字段说明 |\n");
         sbd.append("| :---- | :------ | :------ | :------ |\n");
         for (Map<String, Object> column : columns) {
@@ -210,7 +214,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             String columnComment = toStr(column.get(COLUMN_COMMENT));
             String comment;
             if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
-                comment = "主键" + ("".equals(columnComment) ? "" : String.format("(%s)", columnComment));
+                if (columnComment.contains("主键")) {
+                    comment = columnComment;
+                } else {
+                    comment = "主键" + ("".equals(columnComment) ? "" : String.format("(%s)", columnComment));
+                }
             } else {
                 comment = columnComment;
             }
