@@ -438,9 +438,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 case "isDeleted":
                 case "isDelete":
                 case "deleteFlag":
+                case "delFlag":
                 case "deleted":
                     importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
-                    sbd.append(tab(1)).append("@TableLogic\n"); // (value = "0", delval = "UNIX_TIMESTAMP()")
+                    sbd.append(tab(1)).append("@TableLogic // (value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
                     break;
             }
             sbd.append(tab(1)).append(String.format("private %s %s;\n", fieldType, fieldName));
