@@ -20,10 +20,17 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     /** 文件生成目录 */
     private static final String SAVE_PATH = "/home/xx/temp/";
+    /** 生成 java 文件的目录 */
+    private static final String JAVA_PATH = SAVE_PATH + "java/";
+    /** 生成 xml 文件的目录 */
+    private static final String XML_PATH = SAVE_PATH + "resources/mapper/";
 
-    /** 生成 java 文件的包名 */
-    private static final String PACKAGE = "com.github.xxx";
-    private static final String FEIGN_PACKAGE = PACKAGE + ".feign";
+    /** 全局包 */
+    private static final String PACKAGE = "com.github";
+    /** 生成 java 文件(dao、entity、req、res、service)的包名 */
+    private static final String PROJECT_PACKAGE = PACKAGE + ".inbound.service";
+    /** 生成 feign java 文件的包名 */
+    private static final String FEIGN_PACKAGE = PACKAGE + ".client.inbound";
 
     /** 要生成代码的表名 */
     private static final Set<String> GENERATE_TABLES = Sets.newHashSet(Arrays.asList(
@@ -32,19 +39,18 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "t_product"
     ));
 
-    private static final String JAVA_PATH = SAVE_PATH + "java/";
-    private static final String XML_PATH = SAVE_PATH + "resources/mapper/";
+    private static final String FEIGN_REQ_PACKAGE = FEIGN_PACKAGE + ".req"; // 带 @JsonProperty 注解
+    private static final String FEIGN_RES_PACKAGE = FEIGN_PACKAGE + ".res"; // 带 @JsonProperty 注解
 
-    private static final String FEIGN_REQ_PACKAGE = FEIGN_PACKAGE + ".req";
-    private static final String FEIGN_RES_PACKAGE = FEIGN_PACKAGE + ".res";
-    private static final String REQ_PACKAGE = PACKAGE + ".req";
-    private static final String RES_PACKAGE = PACKAGE + ".res";
-    private static final String MODEL_PACKAGE = PACKAGE + ".entity";
-    private static final String DAO_PACKAGE = PACKAGE + ".dao";
-    private static final String SERVICE_PACKAGE = PACKAGE + ".service";
+    private static final String REQ_PACKAGE = PROJECT_PACKAGE + ".req"; // 带 @JsonProperty 和 @ApiModelProperty 注解
+    private static final String RES_PACKAGE = PROJECT_PACKAGE + ".res"; // 带 @JsonProperty 和 @ApiModelProperty 注解
+    private static final String MODEL_PACKAGE = PROJECT_PACKAGE + ".entity"; // 只有表和字段注释
+    private static final String DAO_PACKAGE = PROJECT_PACKAGE + ".dao";
+    private static final String SERVICE_PACKAGE = PROJECT_PACKAGE + ".service";
+
 
     private static final String MODEL_SUFFIX = "Entity";
-    private static final String DAO_SUFFIX = "Dao";
+    private static final String REPOSITORY_SUFFIX = "Dao";
     private static final String SERVICE_SUFFIX = "Service";
 
     /** 是否把 tinyint(1) 映射成 Boolean */
@@ -478,7 +484,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "}\n";
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
+        String daoClassName = toClass(handleTableName) + REPOSITORY_SUFFIX;
         String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
         String modelClassPath = tableToModel(handleTableName);
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
@@ -724,11 +730,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "}\n";
     private static void service(String tableName) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + DAO_SUFFIX)
+        String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + REPOSITORY_SUFFIX)
                 .replace("$$entity$$", toClass(tableName) + MODEL_SUFFIX);
         String content = String.format(serviceInfo,
                 SERVICE_PACKAGE, tableToDao(tableName), tableToModel(tableName),
-                toClass(tableName) + SERVICE_SUFFIX, toClass(tableName) + DAO_SUFFIX);
+                toClass(tableName) + SERVICE_SUFFIX, toClass(tableName) + REPOSITORY_SUFFIX);
         writeFile(new File(JAVA_PATH + SERVICE_PACKAGE.replace(".", "/"), toClass(tableName) + SERVICE_SUFFIX + ".java"), content);
     }
 
@@ -764,7 +770,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
 
     private static String tableToDao(String tableName) {
-        return DAO_PACKAGE + "." + toClass(tableName) + DAO_SUFFIX;
+        return DAO_PACKAGE + "." + toClass(tableName) + REPOSITORY_SUFFIX;
     }
 
     private static String tab(int count) {
