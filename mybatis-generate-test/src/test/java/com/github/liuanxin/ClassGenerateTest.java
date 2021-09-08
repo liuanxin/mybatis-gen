@@ -420,26 +420,19 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     sbd.append(tab(1)).append("@TableId\n");
                     break;
                 case "createTime":
-                case "createdTime":
-                case "createAt":
-                case "createdAt":
                     importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
                     importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
                     sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT)\n");
                     break;
                 case "updateTime":
-                case "updatedTime":
-                case "updateAt":
-                case "updatedAt":
                     importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
                     importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
                     sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT_UPDATE)\n");
                     break;
-                case "isDeleted":
+                case "deleted":
                 case "isDelete":
                 case "deleteFlag":
                 case "delFlag":
-                case "deleted":
                     importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
                     sbd.append(tab(1)).append("@TableLogic // (value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
                     break;
