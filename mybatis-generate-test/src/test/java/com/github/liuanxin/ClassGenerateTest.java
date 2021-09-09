@@ -53,9 +53,6 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String REPOSITORY_SUFFIX = "Dao";
     private static final String SERVICE_SUFFIX = "Service";
 
-    /** 是否把 tinyint(1) 映射成 Boolean */
-    private static final boolean TINYINT1_TO_BOOLEAN = false;
-
     /**
      * 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
      *
@@ -70,13 +67,15 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final int DUPLICATE_TYPE = 0;
 
     /** true 表示收集所有表的 sql */
-    private static final boolean COLLECT_ALL_SQL = true;
+    private static final boolean COLLECT_ALL_SQL = false;
 
     /** true 表示收集所有的数据字典 */
-    private static final boolean COLLECT_ALL_DB_DICT = true;
+    private static final boolean COLLECT_ALL_DB_DICT = false;
+
+    /** 是否把 tinyint(1) 映射成 Boolean */
+    private static final boolean TINYINT1_TO_BOOLEAN = false;
 
     // 上面是配置项, 下面的不用了
-
 
     private static final String DB = "SELECT DATABASE()";
 
@@ -264,7 +263,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             sbd.append("\n");
             String fieldName = toField(columnName);
             if (!"".equals(columnComment)) {
-                sbd.append(tab(1)).append("@ApiModelProperty(\"").append(columnComment).append("\")\n");
+                sbd.append(tab(1)).append("@ApiModelProperty(\"").append(replaceQuote(columnComment)).append("\")\n");
                 importSet.add("import io.swagger.annotations.ApiModelProperty;\n");
             }
             if (!columnName.equals(fieldName)) {
@@ -290,7 +289,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         List<String> javaList = Lists.newArrayList(javaImportSet);
         Collections.sort(javaList);
         String javaJoin = Joiner.on("").join(javaList);
-        return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, tableComment, toClass(tableName), sbd);
+        return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, replaceQuote(tableComment), toClass(tableName), sbd);
     }
     private static void req(String tableName, String tableComment, List<Map<String, Object>> columns) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
@@ -474,7 +473,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "\n" +
             "    int insertOrUpdate(%s record);\n" +
             "\n" +
-            "    int batchInsertOrUpdate(@Param(\"list\") List<%s> list);\n" +
+            "    int batchInsertOrUpdate(@Param(\"list\") List<%s> record);\n" +
             "}\n";
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
@@ -741,6 +740,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             return String.format("`%s`.`%s` AS `%s`", tableToAlias(tableName), columnName, toColumn(tableName, columnName, true));
         }
         return "`" + columnName + "`";
+    }
+    private static String replaceQuote(String str) {
+        return str.replace("\"", "\\\"");
     }
 
     private static String tableToAlias(String tableName) {
