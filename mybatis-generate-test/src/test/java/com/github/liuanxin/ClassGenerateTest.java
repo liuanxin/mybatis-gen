@@ -67,10 +67,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final int DUPLICATE_TYPE = 0;
 
     /** true 表示收集所有表的 sql */
-    private static final boolean COLLECT_ALL_SQL = false;
+    private static final boolean COLLECT_ALL_SQL = true;
 
     /** true 表示收集所有的数据字典 */
-    private static final boolean COLLECT_ALL_DB_DICT = false;
+    private static final boolean COLLECT_ALL_DB_DICT = true;
 
     /** 是否把 tinyint(1) 映射成 Boolean */
     private static final boolean TINYINT1_TO_BOOLEAN = false;
@@ -81,8 +81,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static final String ALL_TABLE = "SELECT TABLE_NAME tn, TABLE_COMMENT tc FROM information_schema.`TABLES` WHERE table_schema = ?";
 
-    private static final String ALL_COLUMN = "SELECT column_name cn, column_type ct, column_comment cc, is_nullable ie, column_key ck " +
-            "FROM information_schema.`COLUMNS` WHERE table_schema = ? AND table_name = ? ORDER BY ordinal_position";
+    private static final String ALL_COLUMN = "SELECT column_name cn, column_type ct, column_comment cc, column_default cd, " +
+            "is_nullable ie, extra, column_key ck FROM information_schema.`COLUMNS` WHERE table_schema = ? AND table_name = ? " +
+            "ORDER BY ordinal_position";
 
     private static final String CREATE_SQL = "SHOW CREATE TABLE %s";
 
@@ -122,6 +123,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String COLUMN_NAME = "cn";
     private static final String COLUMN_TYPE = "ct";
     private static final String COLUMN_COMMENT = "cc";
+    private static final String COLUMN_DEFAULT = "cd";
+    private static final String EXTRA = "extra";
     private static final String IS_NULLABLE = "ie";
     private static final String COLUMN_KEY = "ck";
 
@@ -225,12 +228,18 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             sbd.append("(`").append(tableComment).append("`)");
         }
         sbd.append("\n\n");
-        sbd.append("| 字段名 | 字段类型 | 是否可空 | 字段说明 |\n");
-        sbd.append("| :---- | :------ | :------ | :------ |\n");
+        sbd.append("| 字段名 | 字段类型 | 是否可空 | 默认值 | 字段说明 |\n");
+        sbd.append("| :---- | :------ | :------ | :----- | :------ |\n");
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
             String isNullable = toStr(column.get(IS_NULLABLE));
+            Object cd = column.get(COLUMN_DEFAULT);
+            Object extra = column.get(EXTRA);
+            String columnDefault = cd == null ? "NULL" : cd.toString();
+            if (extra != null && !extra.toString().isEmpty()) {
+                columnDefault += " " + extra;
+            }
             String columnComment = toStr(column.get(COLUMN_COMMENT));
             String comment;
             if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
@@ -245,6 +254,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             sbd.append("| ").append(columnName)
                     .append(" | ").append(columnType)
                     .append(" | ").append("yes".equalsIgnoreCase(isNullable) ? "✔" : "✘")
+                    .append(" | ").append(columnDefault)
                     .append(" | ").append(comment).append(" |\n");
         }
         return sbd.toString();
