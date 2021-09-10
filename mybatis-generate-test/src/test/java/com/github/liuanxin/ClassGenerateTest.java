@@ -134,10 +134,12 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         String dbName = jdbcTemplate.queryForObject(DB, String.class);
         List<Map<String, Object>> tables = jdbcTemplate.queryForList(ALL_TABLE, dbName);
         StringBuilder dbSbd = new StringBuilder();
-        StringBuilder mdSbd = new StringBuilder("### 数据库字典\n\n");
+        StringBuilder mdSbd = new StringBuilder();
         System.out.println("========================================");
+        List<String> tableList = Lists.newArrayList();
         for (Map<String, Object> table : tables) {
             String tableName = toStr(table.get(TABLE_NAME));
+            tableList.add(tableName);
             String tableComment = toStr(table.get(TABLE_COMMENT));
             List<Map<String, Object>> columns = jdbcTemplate.queryForList(ALL_COLUMN, dbName, tableName);
 
@@ -149,7 +151,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .replace("ROW_FORMAT=DYNAMIC ", "");
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
-            if (GENERATE_TABLES.isEmpty() || GENERATE_TABLES.contains(tableName)) {
+            if (!GENERATE_TABLES.isEmpty() && GENERATE_TABLES.contains(tableName)) {
                 System.out.printf("%s : %s\n", tableName, tableComment);
                 dbSbd.append(createSql).append(";\n\n\n");
                 mdSbd.append(dbDict).append("\n\n");
@@ -172,9 +174,17 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 }
             }
         }
-        writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
-        writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.toString().trim() + "\n");
+        System.out.println("\"" + Joiner.on("\",\n\"").join(tableList) + "\"");
         System.out.println("========================================");
+        if (dbSbd.length() > 0 || mdSbd.length() > 0) {
+            if (dbSbd.length() > 0) {
+                writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
+            }
+            if (mdSbd.length() > 0) {
+                writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.insert(0, "### 数据库字典\n\n").toString().trim() + "\n");
+            }
+            System.out.println("========================================");
+        }
     }
 
     private static void deleteDirectory(File dir) {
