@@ -247,10 +247,21 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             String isNullable = toStr(column.get(IS_NULLABLE));
             Object cd = column.get(COLUMN_DEFAULT);
             Object extra = column.get(EXTRA);
-            String columnDefault = cd == null ? "NULL" : cd.toString();
-            if (extra != null && !extra.toString().isEmpty()) {
-                columnDefault += " " + extra.toString().replace("on update ", "ON UPDATE ");
+            String columnDefault;
+            if (cd == null) {
+                if (extra != null && !extra.toString().isEmpty()) {
+                    columnDefault = extra.toString().replace("on update ", "ON UPDATE ");
+                } else {
+                    columnDefault = "NULL";
+                }
+            } else {
+                if (extra != null && !extra.toString().isEmpty()) {
+                    columnDefault = cd + " " + extra.toString().replace("on update ", "ON UPDATE ");
+                } else {
+                    columnDefault = cd.toString();
+                }
             }
+
             String columnComment = toStr(column.get(COLUMN_COMMENT));
             String comment;
             if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
