@@ -239,7 +239,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             Object extra = column.get(EXTRA);
             String columnDefault = cd == null ? "NULL" : cd.toString();
             if (extra != null && !extra.toString().isEmpty()) {
-                columnDefault += " " + extra;
+                columnDefault += " " + extra.toString().replace("on update ", "ON UPDATE ");
             }
             String columnComment = toStr(column.get(COLUMN_COMMENT));
             String comment;
