@@ -730,6 +730,13 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "\n" +
             "    @Transactional\n" +
             "    public int add($$entity$$ record) {\n" +
+            "        if (record == null) {\n" +
+            "            return 0;\n" +
+            "        }\n" +
+            "\n" +
+            "        if (record.getId() == null || record.getId() <= 0) {\n" +
+            "            record.setId(IdWorker.getId());\n" +
+            "        }\n" +
             "        return $$var$$.insert(record);\n" +
             "    }\n" +
             "\n" +
@@ -742,6 +749,12 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "    public int batchAddOrUpdate(List<$$entity$$> list) {\n" +
             "        if (list == null || list.isEmpty()) {\n" +
             "            return 0;\n" +
+            "        }\n" +
+            "\n" +
+            "        for ($$entity$$ record : list) {\n" +
+            "            if (record.getId() == null || record.getId() <= 0) {\n" +
+            "                record.setId(IdWorker.getId());\n" +
+            "            }\n" +
             "        }\n" +
             "        return $$var$$.batchInsertOrUpdate(list);\n" +
             "    }\n" +
