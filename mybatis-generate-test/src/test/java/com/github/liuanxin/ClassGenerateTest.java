@@ -66,6 +66,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
      */
     private static final int DUPLICATE_TYPE = 0;
 
+    /** true 收集删表语句 */
+    private static final boolean COLLECT_DROP_TABLE = true;
     /** true 表示收集所有表的 sql */
     private static final boolean COLLECT_ALL_SQL = true;
 
@@ -151,11 +153,16 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
                     .replace(" USING BTREE", "")
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ")
+                    .replace(" CHARACTER SET utf8 COLLATE utf8_bin ", " ")
+                    .replace(" CHARACTER SET utf8mb4 COLLATE utf8mb4_bin ", " ")
                     .replace("ROW_FORMAT=DYNAMIC ", "");
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
             if (!GENERATE_TABLES.isEmpty() && GENERATE_TABLES.contains(tableName)) {
                 System.out.printf("%s : %s\n", tableName, tableComment);
+                if (COLLECT_DROP_TABLE) {
+                    dbSbd.append("DROP TABLE IF EXISTS `").append(tableName).append("`").append(";\n");
+                }
                 dbSbd.append(createSql).append(";\n\n\n");
                 mdSbd.append(dbDict).append("\n\n");
 
@@ -170,6 +177,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 System.out.println("========================================");
             } else {
                 if (COLLECT_ALL_SQL) {
+                    if (COLLECT_DROP_TABLE) {
+                        dbSbd.append("DROP TABLE IF EXISTS `").append(tableName).append("`").append(";\n");
+                    }
                     dbSbd.append(createSql).append(";\n\n\n");
                 }
                 if (COLLECT_ALL_DB_DICT) {
