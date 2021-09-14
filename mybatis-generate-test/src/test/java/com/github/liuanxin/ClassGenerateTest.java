@@ -547,7 +547,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 "\n" +
                 xmlInsertOrUpdate(tableName, columns) + "\n" +
                 "\n" +
-                xmlBatchInsertOrUpdate(tableName, columns) + "\n" +
+                // xmlBatchInsertOrUpdate(tableName, columns) + "\n" +
+                xmlBatchInsertOrUpdateNil(tableName, columns) + "\n" +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + ".xml"), content);
     }
@@ -586,7 +587,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             if ((i + 1) != columns.size()) {
                 columnBuilder.append(", ");
             }
-            if (count % (alias ? ALIAS_WRAP_COUNT : WRAP_COUNT) == 0) {
+            if (count % (alias ? ALIAS_WRAP_COUNT : WRAP_COUNT) == 0 && !columnBuilder.toString().endsWith("`")) {
                 columnBuilder.delete(columnBuilder.length() - 1, columnBuilder.length()).append("\n").append(tab(2));
                 count = 0;
             }
@@ -651,8 +652,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
     private static String xmlBatchInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" keyColumn=\"id\" keyProperty=\"id\"" +
-                " parameterType=\"map\" useGeneratedKeys=\"true\">\n");
+        sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" parameterType=\"map\"" +
+                " keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
         sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\" separator=\",\">\n");
         sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
@@ -706,6 +707,64 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(3)).append("</if>\n");
 
         sbd.append(tab(2)).append("</foreach>\n");
+        sbd.append(tab(1)).append("</insert>");
+        return sbd.toString();
+    }
+    private static String xmlBatchInsertOrUpdateNil(String tableName, List<Map<String, Object>> columns) {
+        StringBuilder sbd = new StringBuilder();
+        sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" parameterType=\"map\">\n");
+        sbd.append(tab(2)).append(String.format("INSERT INTO `%s` (\n", tableName));
+        for (int i = 0; i < columns.size(); i++) {
+            Map<String, Object> column = columns.get(i);
+            sbd.append(tab(3)).append(String.format("`%s`", toColumn(null, toStr(column.get(COLUMN_NAME)), false)));
+            if (i < column.size() - 1) {
+                sbd.append(",");
+            }
+            sbd.append("\n");
+        }
+        sbd.append(tab(2)).append(")\n");
+
+        sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\" separator=\",\">\n");
+        sbd.append(tab(3)).append("<trim prefix=\"(\" suffix=\")\">\n");
+        for (int i = 0; i < columns.size(); i++) {
+            Map<String, Object> column = columns.get(i);
+            String columnType = toStr(column.get(COLUMN_TYPE));
+            columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
+            String jdbcType = TYPE_DB_MAP.get(columnType.toLowerCase());
+            if (jdbcType == null) {
+                throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
+            }
+            String columnName = toStr(column.get(COLUMN_NAME));
+            sbd.append(tab(4)).append(String.format("#{item.%s,jdbcType=%s}", toField(columnName), jdbcType));
+            if (i < column.size() - 1) {
+                sbd.append(",");
+            }
+            sbd.append("\n");
+        }
+        sbd.append(tab(3)).append("</trim>\n");
+        sbd.append(tab(2)).append("</foreach>\n");
+
+        String duplicate = (DUPLICATE_TYPE == 1) ? "AS new ON DUPLICATE KEY UPDATE" : "ON DUPLICATE KEY UPDATE";
+        sbd.append(tab(2)).append(duplicate).append("\n");
+        for (int i = 0; i < columns.size(); i++) {
+            Map<String, Object> column = columns.get(i);
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String toColumn = toColumn(null, columnName, false);
+            // 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
+            String values;
+            if (DUPLICATE_TYPE == 1) {
+                values = String.format("new.`%s`", toColumn);
+            } else if (DUPLICATE_TYPE == 2) {
+                values = String.format("VALUE(`%s`)", toColumn);
+            } else {
+                values = String.format("VALUES(`%s`)", toColumn);
+            }
+            sbd.append(tab(3)).append(String.format("`%s` = %s", toColumn, values));
+            if (i < column.size() - 1) {
+                sbd.append(",");
+            }
+            sbd.append("\n");
+        }
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
@@ -799,8 +858,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static String toColumnName(String tableName, String columnName, boolean alias) {
         if (alias) {
             return String.format("`%s`.`%s` AS `%s`", tableToAlias(tableName), columnName, toColumn(tableName, columnName, true));
+        } else {
+            return "`" + columnName + "`";
         }
-        return "`" + columnName + "`";
     }
     private static String replaceQuote(String str) {
         return str.replace("\"", "\\\"");
