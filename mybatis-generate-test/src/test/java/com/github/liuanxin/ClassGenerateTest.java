@@ -155,7 +155,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ")
                     .replace(" CHARACTER SET utf8 COLLATE utf8_bin ", " ")
                     .replace(" CHARACTER SET utf8mb4 COLLATE utf8mb4_bin ", " ")
-                    .replace("ROW_FORMAT=DYNAMIC ", "");
+                    .replace("ROW_FORMAT=DYNAMIC ", "")
+                    .replaceFirst(" AUTO_INCREMENT=([0-9]*?) ", " ")
+                    + ";\n\n\n";
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
             if (!GENERATE_TABLES.isEmpty() && GENERATE_TABLES.contains(tableName)) {
@@ -163,8 +165,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 if (COLLECT_DROP_TABLE) {
                     dbSbd.append("DROP TABLE IF EXISTS `").append(tableName).append("`").append(";\n");
                 }
-                dbSbd.append(createSql).append(";\n\n\n");
-                mdSbd.append(dbDict).append("\n\n");
+                dbSbd.append(createSql);
+                mdSbd.append(dbDict);
 
                 feignReq(tableName, tableComment, columns);
                 feignRes(tableName, tableComment, columns);
@@ -180,10 +182,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     if (COLLECT_DROP_TABLE) {
                         dbSbd.append("DROP TABLE IF EXISTS `").append(tableName).append("`").append(";\n");
                     }
-                    dbSbd.append(createSql).append(";\n\n\n");
+                    dbSbd.append(createSql);
                 }
                 if (COLLECT_ALL_DB_DICT) {
-                    mdSbd.append(dbDict).append("\n\n");
+                    mdSbd.append(dbDict);
                 }
             }
         }
@@ -194,7 +196,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
             }
             if (mdSbd.length() > 0) {
-                writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.insert(0, "### 数据库字典\n\n").toString().trim() + "\n");
+                writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.insert(0, "### 数据库字典\n\n").toString().trim() + "\n\n-----\n");
             }
             System.out.println("========================================");
         }
@@ -233,7 +235,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static String generateDbDict(String tableName, String tableComment, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
-        sbd.append("#### ").append(tableName);
+        sbd.append("-----\n\n#### ").append(tableName);
         if (tableComment != null && !tableComment.trim().isEmpty()) {
             sbd.append("(`").append(tableComment).append("`)");
         }
@@ -280,7 +282,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .append(" | ").append(columnDefault)
                     .append(" | ").append(comment).append(" |\n");
         }
-        return sbd.toString();
+        return sbd.append("\n").toString();
     }
 
     private static final String REQ_RES = "package %s;\n" +
