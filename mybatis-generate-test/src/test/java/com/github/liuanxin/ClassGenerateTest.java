@@ -151,10 +151,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
             String createSql = toStr(sqlMap.get("Create Table"))
                     .replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
+                    .replaceFirst(" CHARACTER SET utf8(.*?) ", " ")
+                    .replaceFirst(" COLLATE utf8(.*?)_bin ", " ")
                     .replace(" USING BTREE", "")
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ")
-                    .replace(" CHARACTER SET utf8 COLLATE utf8_bin ", " ")
-                    .replace(" CHARACTER SET utf8mb4 COLLATE utf8mb4_bin ", " ")
                     .replace("ROW_FORMAT=DYNAMIC ", "")
                     .replaceFirst(" AUTO_INCREMENT=([0-9]*?) ", " ")
                     + ";\n\n\n";
