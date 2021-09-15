@@ -717,7 +717,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> column = columns.get(i);
             sbd.append(tab(3)).append(String.format("`%s`", toColumn(null, toStr(column.get(COLUMN_NAME)), false)));
-            if (i < column.size() - 1) {
+            if (i < columns.size() - 1) {
                 sbd.append(",");
             }
             sbd.append("\n");
@@ -736,7 +736,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             }
             String columnName = toStr(column.get(COLUMN_NAME));
             sbd.append(tab(4)).append(String.format("#{item.%s,jdbcType=%s}", toField(columnName), jdbcType));
-            if (i < column.size() - 1) {
+            if (i < columns.size() - 1) {
                 sbd.append(",");
             }
             sbd.append("\n");
@@ -760,7 +760,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 values = String.format("VALUES(`%s`)", toColumn);
             }
             sbd.append(tab(3)).append(String.format("`%s` = %s", toColumn, values));
-            if (i < column.size() - 1) {
+            if (i < columns.size() - 1) {
                 sbd.append(",");
             }
             sbd.append("\n");
