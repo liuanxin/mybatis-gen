@@ -48,7 +48,6 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String DAO_PACKAGE = PROJECT_PACKAGE + ".dao";
     private static final String SERVICE_PACKAGE = PROJECT_PACKAGE + ".service";
 
-
     private static final String MODEL_SUFFIX = "Entity";
     private static final String DAO_SUFFIX = "Dao";
     private static final String SERVICE_SUFFIX = "Service";
@@ -155,7 +154,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .replaceAll(" COLLATE utf8(.*?) ", " ")
                     .replaceAll(" USING BTREE", "")
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ")
-                    .replace("ROW_FORMAT=DYNAMIC ", "")
+                    .replace(" ROW_FORMAT=DYNAMIC", "")
                     .replaceFirst(" AUTO_INCREMENT=([0-9]*?) ", " ")
                     + ";\n\n\n";
 
