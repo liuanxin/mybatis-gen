@@ -50,7 +50,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
 
     private static final String MODEL_SUFFIX = "Entity";
-    private static final String REPOSITORY_SUFFIX = "Dao";
+    private static final String DAO_SUFFIX = "Dao";
     private static final String SERVICE_SUFFIX = "Service";
 
     /**
@@ -527,7 +527,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "}\n";
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String daoClassName = toClass(handleTableName) + REPOSITORY_SUFFIX;
+        String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
         String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
         String modelClassPath = tableToModel(handleTableName);
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
@@ -551,7 +551,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 "\n" +
                 // xmlBatchDynamicInsertOrUpdate(tableName, columns) + "\n" +
                 "\n" +
-                xmlBatchInsertOrUpdateNil(tableName, columns) + "\n" +
+                xmlBatchInsertOrUpdate(tableName, columns) + "\n" +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + ".xml"), content);
     }
@@ -713,7 +713,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
-    private static String xmlBatchInsertOrUpdateNil(String tableName, List<Map<String, Object>> columns) {
+    private static String xmlBatchInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
         sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" parameterType=\"map\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s` (\n", tableName));
@@ -844,11 +844,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "}\n";
     private static void service(String tableName) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + REPOSITORY_SUFFIX)
+        String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + DAO_SUFFIX)
                 .replace("$$entity$$", toClass(tableName) + MODEL_SUFFIX);
         String content = String.format(serviceInfo,
                 SERVICE_PACKAGE, tableToDao(tableName), tableToModel(tableName),
-                toClass(tableName) + SERVICE_SUFFIX, toClass(tableName) + REPOSITORY_SUFFIX);
+                toClass(tableName) + SERVICE_SUFFIX, toClass(tableName) + DAO_SUFFIX);
         writeFile(new File(JAVA_PATH + SERVICE_PACKAGE.replace(".", "/"), toClass(tableName) + SERVICE_SUFFIX + ".java"), content);
     }
 
@@ -888,7 +888,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     }
 
     private static String tableToDao(String tableName) {
-        return DAO_PACKAGE + "." + toClass(tableName) + REPOSITORY_SUFFIX;
+        return DAO_PACKAGE + "." + toClass(tableName) + DAO_SUFFIX;
     }
 
     private static String tab(int count) {
