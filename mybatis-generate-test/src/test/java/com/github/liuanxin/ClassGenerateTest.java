@@ -28,9 +28,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     /** 全局包 */
     private static final String PACKAGE = "com.github";
     /** 生成 java 文件(dao、entity、req、res、service)的包名 */
-    private static final String PROJECT_PACKAGE = PACKAGE + ".inbound.service";
+    private static final String PROJECT_PACKAGE = PACKAGE + ".xxx.service";
     /** 生成 feign java 文件的包名 */
-    private static final String FEIGN_PACKAGE = PACKAGE + ".client.inbound";
+    private static final String FEIGN_PACKAGE = PACKAGE + ".client.xxx";
 
     /** 要生成代码的表名 */
     private static final Set<String> GENERATE_TABLES = Sets.newHashSet(Arrays.asList(
@@ -151,9 +151,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
             String createSql = toStr(sqlMap.get("Create Table"))
                     .replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
-                    .replaceFirst(" CHARACTER SET utf8(.*?) ", " ")
-                    .replaceFirst(" COLLATE utf8(.*?)_bin ", " ")
-                    .replace(" USING BTREE", "")
+                    .replaceAll(" CHARACTER SET utf8(.*?) ", " ")
+                    .replaceAll(" COLLATE utf8(.*?) ", " ")
+                    .replaceAll(" USING BTREE", "")
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ")
                     .replace("ROW_FORMAT=DYNAMIC ", "")
                     .replaceFirst(" AUTO_INCREMENT=([0-9]*?) ", " ")
@@ -303,6 +303,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
+            if (columnType.contains(" ")) {
+                columnType = columnType.substring(0, columnType.indexOf(" "));
+            }
             if (!(TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType))) {
                 columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
             }
@@ -370,6 +373,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
+            if (columnType.contains(" ")) {
+                columnType = columnType.substring(0, columnType.indexOf(" "));
+            }
             if (!(TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType))) {
                 columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
             }
@@ -438,6 +444,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
+            if (columnType.contains(" ")) {
+                columnType = columnType.substring(0, columnType.indexOf(" "));
+            }
             if (!(TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType))) {
                 columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
             }
@@ -562,6 +571,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
+            if (columnType.contains(" ")) {
+                columnType = columnType.substring(0, columnType.indexOf(" "));
+            }
             columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
 
             String jdbcType = TYPE_DB_MAP.get(columnType.toLowerCase());
@@ -618,6 +630,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
+            if (columnType.contains(" ")) {
+                columnType = columnType.substring(0, columnType.indexOf(" "));
+            }
             columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
 
             sbd.append(tab(3)).append(String.format("<if test=\"%s != null\">\n", toField(columnName)));
@@ -675,6 +690,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
+            if (columnType.contains(" ")) {
+                columnType = columnType.substring(0, columnType.indexOf(" "));
+            }
             columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
 
             sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
@@ -731,6 +749,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> column = columns.get(i);
             String columnType = toStr(column.get(COLUMN_TYPE));
+            if (columnType.contains(" ")) {
+                columnType = columnType.substring(0, columnType.indexOf(" "));
+            }
             columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
             String jdbcType = TYPE_DB_MAP.get(columnType.toLowerCase());
             if (jdbcType == null) {
