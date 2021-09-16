@@ -724,8 +724,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         sbd.append(tab(2)).append(")\n");
 
-        sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\" separator=\",\">\n");
-        sbd.append(tab(3)).append("<trim prefix=\"(\" suffix=\")\">\n");
+        sbd.append(tab(2)).append("<foreach collection=\"list\" item=\"item\" open=\"(\" separator=\"),(\" close=\")\">\n");
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> column = columns.get(i);
             String columnType = toStr(column.get(COLUMN_TYPE));
@@ -735,13 +734,12 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
             }
             String columnName = toStr(column.get(COLUMN_NAME));
-            sbd.append(tab(4)).append(String.format("#{item.%s,jdbcType=%s}", toField(columnName), jdbcType));
+            sbd.append(tab(3)).append(String.format("#{item.%s,jdbcType=%s}", toField(columnName), jdbcType));
             if (i < columns.size() - 1) {
                 sbd.append(",");
             }
             sbd.append("\n");
         }
-        sbd.append(tab(3)).append("</trim>\n");
         sbd.append(tab(2)).append("</foreach>\n");
 
         String duplicate = (DUPLICATE_TYPE == 1) ? "AS new ON DUPLICATE KEY UPDATE" : "ON DUPLICATE KEY UPDATE";
