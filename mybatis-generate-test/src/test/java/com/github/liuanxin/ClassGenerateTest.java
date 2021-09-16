@@ -196,7 +196,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
             }
             if (mdSbd.length() > 0) {
-                writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.insert(0, "### 数据库字典\n\n").toString().trim() + "\n\n-----\n");
+                writeFile(new File(SAVE_PATH + "db-dict.md"), "\n" + mdSbd.insert(0, "### 数据库字典\n\n").toString().trim() + "\n\n-----\n");
             }
             System.out.println("========================================");
         }
@@ -279,7 +279,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .append(" | ").append(columnName)
                     .append(" | ").append(columnType)
                     .append(" | ").append("yes".equalsIgnoreCase(isNullable) ? "✔" : "✘")
-                    .append(" | ").append(columnDefault)
+                    .append(" | ").append(columnDefault.replace(" DEFAULT_GENERATED", ""))
                     .append(" | ").append(comment).append(" |\n");
         }
         return sbd.append("\n").toString();
