@@ -521,7 +521,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "\n" +
             "    int insertOrUpdate(%s record);\n" +
             "\n" +
-            "    int batchInsertOrUpdate(@Param(\"list\") List<%s> record);\n" +
+            // "    int batchDynamicInsertOrUpdate(@Param(\"list\") List<%s> list);\n" +
+            "\n" +
+            "    int batchInsertOrUpdate(@Param(\"list\") List<%s> list);\n" +
             "}\n";
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
@@ -530,7 +532,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         String modelClassPath = tableToModel(handleTableName);
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(DAO, DAO_PACKAGE, modelClassPath, comment,
-                daoClassName, modelClassName, modelClassName, modelClassName);
+                daoClassName, modelClassName, modelClassName, modelClassName); // , modelClassName);
         writeFile(new File(JAVA_PATH + DAO_PACKAGE.replace(".", "/"), daoClassName + ".java"), content);
     }
 
@@ -547,7 +549,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 "\n" +
                 xmlInsertOrUpdate(tableName, columns) + "\n" +
                 "\n" +
-                // xmlBatchInsertOrUpdate(tableName, columns) + "\n" +
+                // xmlBatchDynamicInsertOrUpdate(tableName, columns) + "\n" +
+                "\n" +
                 xmlBatchInsertOrUpdateNil(tableName, columns) + "\n" +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + ".xml"), content);
@@ -650,9 +653,9 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
-    private static String xmlBatchInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
+    private static String xmlBatchDynamicInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" parameterType=\"map\"" +
+        sbd.append(tab(1)).append("<insert id=\"batchDynamicInsertOrUpdate\" parameterType=\"map\"" +
                 " keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
         sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\" separator=\",\">\n");
