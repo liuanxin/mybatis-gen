@@ -156,6 +156,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     .replaceAll(" COLLATE=utf8(.*?)", "")
                     .replaceAll(" USING BTREE", "")
                     .replace(" DEFAULT CHARSET=utf8 ", " DEFAULT CHARSET=utf8mb4 ")
+                    .replace(" DEFAULT NULL ", " ")
                     .replace(" ROW_FORMAT=DYNAMIC", "")
                     .replaceFirst(" AUTO_INCREMENT=([0-9]*?) ", " ")
                     + ";\n\n\n";
