@@ -81,8 +81,8 @@
 
 
         <table tableName="t_system_config" domainObjectName="SystemConfig" alias="sc" escapeWildcards="true"
-               enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false"
-               enableSelectByExample="false" delimitIdentifiers="true" delimitAllColumns="true"/>
+               enableCountByExample="true" enableUpdateByExample="true" enableDeleteByExample="true"
+               enableSelectByExample="true" delimitIdentifiers="true" delimitAllColumns="true"/>
 
 
     </context>
