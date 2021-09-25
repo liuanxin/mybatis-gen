@@ -28,7 +28,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     /** 全局包 */
     private static final String PACKAGE = "com.github";
     /** 生成 java 文件(dao、entity、req、res、service)的包名 */
-    private static final String PROJECT_PACKAGE = PACKAGE + ".xxx.service";
+    private static final String PROJECT_PACKAGE = PACKAGE + ".xxx";
     /** 生成 feign java 文件的包名 */
     private static final String FEIGN_PACKAGE = PACKAGE + ".client.xxx";
 

@@ -26,7 +26,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static final String XML_PATH = SAVE_PATH + "resources/mapper/";
 
     /** 全局包 */
-    private static final String PACKAGE = "com.yicheng";
+    private static final String PACKAGE = "com.github";
     /** 生成 java 文件(dao、entity、req、res、service)的包名 */
     private static final String PROJECT_PACKAGE = PACKAGE + ".xxx";
 
