@@ -147,15 +147,13 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
             Map<String, Object> sqlMap = jdbcTemplate.queryForMap(String.format(CREATE_SQL, tableName));
             String createSql = toStr(sqlMap.get("Create Table"))
                     .replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
-                    .replaceAll(" CHARACTER SET utf8(.*?) ", " ")
-                    .replaceAll(" CHARACTER SET utf8(.*?)", "")
-                    .replaceAll(" COLLATE utf8(.*?) ", " ")
-                    .replaceAll(" COLLATE=utf8(.*?)", "")
-                    .replaceAll(" USING BTREE", "")
                     .replace(" DEFAULT NULL ", " ")
-                    .replace(" ROW_FORMAT=DYNAMIC", "")
+                    .replace(" USING BTREE", "")
+                    .replaceFirst(" CHARACTER SET utf8(.*?)([ ])", "$2")
+                    .replaceFirst(" COLLATE utf8(.*?)([ ])", "$2")
                     .replaceFirst(" DEFAULT CHARSET=utf8(.*?)([; ])", " DEFAULT CHARSET=utf8mb4$2")
-                    .replaceFirst(" AUTO_INCREMENT=([0-9]*?) ", " ")
+                    .replaceFirst(" ROW_FORMAT=DYNAMIC([ ])", "$2")
+                    .replaceFirst(" AUTO_INCREMENT=([0-9]*?)([ ])", "$2")
                     + ";\n\n\n";
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
