@@ -28,7 +28,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     /** 全局包 */
     private static final String PACKAGE = "com.yicheng";
     /** 生成 java 文件(dao、entity、req、res、service)的包名 */
-    private static final String PROJECT_PACKAGE = PACKAGE + ".assistant";
+    private static final String PROJECT_PACKAGE = PACKAGE + ".xxx";
 
     /** 要生成代码的表名 */
     private static final Set<String> GENERATE_TABLES = Sets.newHashSet(Arrays.asList(
@@ -39,11 +39,11 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static final String REQ_PACKAGE = PROJECT_PACKAGE + ".req"; // 带 @ApiParam 注解
     private static final String RES_PACKAGE = PROJECT_PACKAGE + ".res"; // 带 @ApiReturn 注解
     private static final String MODEL_PACKAGE = PROJECT_PACKAGE + ".model"; // 只有表和字段注释
-    private static final String DAO_PACKAGE = PROJECT_PACKAGE + ".dao";
+    private static final String DAO_PACKAGE = PROJECT_PACKAGE + ".repository";
     private static final String SERVICE_PACKAGE = PROJECT_PACKAGE + ".service";
 
     private static final String MODEL_SUFFIX = "";
-    private static final String DAO_SUFFIX = "Dao";
+    private static final String DAO_SUFFIX = "Mapper";
     private static final String SERVICE_SUFFIX = "Service";
 
     /**
@@ -87,10 +87,10 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
 
     private static final Map<String, String> TYPE_MAP = maps(
             "tinyint(1)", "Boolean",
+            "tinyint", "Boolean",
             "smallint", "Integer",
-            "tinyint", "Integer",
-            "bigint", "Long",
             "int", "Integer",
+            "bigint", "Long",
             "text", "String",
             "longtext", "String",
             "varchar", "String",
@@ -418,7 +418,11 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                 case "deleteFlag":
                 case "delFlag":
                     importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
-                    sbd.append(tab(1)).append("@TableLogic // (value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
+                    if (columnType.equalsIgnoreCase("int") || columnType.equalsIgnoreCase("bigint")) {
+                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
+                    } else {
+                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"1\")\n");
+                    }
                     break;
             }
             sbd.append(tab(1)).append(String.format("private %s %s;\n", fieldType, fieldName));
