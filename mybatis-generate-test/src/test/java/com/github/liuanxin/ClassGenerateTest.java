@@ -51,6 +51,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String MODEL_SUFFIX = "Entity";
     private static final String DAO_SUFFIX = "Dao";
     private static final String SERVICE_SUFFIX = "Service";
+    private static final String XML_SUFFIX = "Mapper";
 
     /**
      * 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
@@ -564,7 +565,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 "\n" +
                 xmlBatchInsertOrUpdate(tableName, columns) + "\n" +
                 "</mapper>\n";
-        writeFile(new File(XML_PATH, toClass(handleTableName) + ".xml"), content);
+        writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), content);
     }
     private static String xmlMap(String tableName, boolean alias, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
