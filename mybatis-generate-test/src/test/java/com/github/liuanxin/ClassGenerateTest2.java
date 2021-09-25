@@ -149,12 +149,13 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                     .replace("CREATE TABLE ", "CREATE TABLE IF NOT EXISTS ")
                     .replace(" DEFAULT NULL ", " ")
                     .replace(" USING BTREE", "")
-                    .replaceFirst(" CHARACTER SET utf8(.*?)([ ])", "$2")
-                    .replaceFirst(" DEFAULT CHARSET=utf8(.*?)([; ])", " DEFAULT CHARSET=utf8mb4$2")
-                    .replaceFirst(" COLLATE=utf8(.*?)([; ])", "$2")
-                    .replaceFirst(" ROW_FORMAT=DYNAMIC([ ])", "$2")
-                    .replaceFirst(" AUTO_INCREMENT=([0-9]*?)([ ])", "$2")
-                    .replaceAll(" COLLATE utf8(.*?)([ ])", "$2")
+                    .replaceFirst(" AUTO_INCREMENT=([0-9]*)", "")
+                    .replaceAll(" CHARACTER SET utf8([^ ]*)", "")
+                    .replaceAll(" DEFAULT CHARSET=utf8([^ ]*)", " DEFAULT CHARSET=utf8mb4")
+                    .replaceAll(" COLLATE=utf8([^ ]*)", "")
+                    .replaceAll(" ROW_FORMAT=DYNAMIC([^ ]*)", "")
+                    .replaceAll(" COLLATE utf8([^ ]*)", "")
+                    .replaceAll(" CHARACTER SET utf8([^ ]*)", "")
                     + ";\n\n\n";
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
