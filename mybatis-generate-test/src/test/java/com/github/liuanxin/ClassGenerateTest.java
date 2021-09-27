@@ -631,7 +631,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(3)).append("keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
         sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
 
-        sbd.append(tab(2)).append("<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">\n");
+        sbd.append(tab(2)).append("<trim prefix=\"(\" suffix=\") VALUES\" suffixOverrides=\",\">\n");
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             sbd.append(tab(3)).append(String.format("<if test=\"%s != null\">\n", toField(columnName)));
@@ -640,7 +640,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         sbd.append(tab(2)).append("</trim>\n");
 
-        sbd.append(tab(2)).append("<trim prefix=\"VALUES (\" suffix=\")\" suffixOverrides=\",\">\n");
+        sbd.append(tab(2)).append("<trim prefix=\"(\" suffix=\")\" suffixOverrides=\",\">\n");
         for (Map<String, Object> column : columns) {
             String columnName = toStr(column.get(COLUMN_NAME));
             String columnType = toStr(column.get(COLUMN_TYPE));
