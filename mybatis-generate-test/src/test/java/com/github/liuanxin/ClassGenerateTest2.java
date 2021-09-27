@@ -89,32 +89,43 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static final Map<String, String> TYPE_MAP = maps(
             "tinyint(1)", "Boolean",
             "tinyint", "Boolean",
+
             "smallint", "Integer",
+            "mediumint", "Integer",
             "int", "Integer",
             "bigint", "Long",
+
+            "char", "String",
+            "varchar", "String",
             "text", "String",
             "longtext", "String",
-            "varchar", "String",
-            "char", "String",
-            "datetime", "Date",
-            "timestamp", "Date",
+
+            "year", "Date",
             "date", "Date",
             "time", "Date",
+            "datetime", "Date",
+            "timestamp", "Date",
+
             "decimal", "BigDecimal"
     );
     private static final Map<String, String> TYPE_DB_MAP = maps(
             "tinyint", "TINYINT",
             "smallint", "SMALLINT",
-            "bigint", "BIGINT",
+            "mediumint", "MEDIUMINT",
             "int", "INTEGER",
+            "bigint", "BIGINT",
+
+            "char", "VARCHAR",
+            "varchar", "VARCHAR",
             "text", "LONGVARCHAR",
             "longtext", "LONGVARCHAR",
-            "varchar", "VARCHAR",
-            "char", "VARCHAR",
+
+            "year", "DATE",
+            "date", "DATE",
+            "time", "DATE",
             "datetime", "TIMESTAMP",
             "timestamp", "TIMESTAMP",
-            "date", "TIMESTAMP",
-            "time", "TIMESTAMP",
+
             "decimal", "DECIMAL"
     );
     private static final String TABLE_NAME = "tn";
