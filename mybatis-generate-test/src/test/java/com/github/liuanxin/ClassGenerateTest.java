@@ -544,7 +544,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "\n" +
             "    int insertOrUpdate(%s record);\n" +
             "\n" +
-            // "    int batchDynamicInsertOrUpdate(@Param(\"list\") List<%s> list);\n" +
+            "    int batchDynamicInsertOrUpdate(@Param(\"list\") List<%s> list);\n" +
             "\n" +
             "    int batchInsertOrUpdate(@Param(\"list\") List<%s> list);\n" +
             "}\n";
@@ -555,7 +555,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         String modelClassPath = tableToModel(handleTableName);
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(DAO, DAO_PACKAGE, modelClassPath, comment,
-                daoClassName, modelClassName, modelClassName, modelClassName); // , modelClassName);
+                daoClassName, modelClassName, modelClassName, modelClassName, modelClassName);
         writeFile(new File(JAVA_PATH + DAO_PACKAGE.replace(".", "/"), daoClassName + ".java"), content);
     }
 
@@ -572,7 +572,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 "\n" +
                 xmlInsertOrUpdate(tableName, columns) + "\n" +
                 "\n" +
-                // xmlBatchDynamicInsertOrUpdate(tableName, columns) + "\n" +
+                xmlBatchDynamicInsertOrUpdate(tableName, columns) + "\n" +
                 "\n" +
                 xmlBatchInsertOrUpdate(tableName, columns) + "\n" +
                 "</mapper>\n";
@@ -757,7 +757,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             }
             sbd.append("\n");
         }
-        sbd.append(tab(2)).append(")\n");
+        sbd.append(tab(2)).append(") VALUES\n");
 
         sbd.append(tab(2)).append("<foreach collection=\"list\" item=\"item\" open=\"(\" separator=\"),(\" close=\")\">\n");
         for (int i = 0; i < columns.size(); i++) {
