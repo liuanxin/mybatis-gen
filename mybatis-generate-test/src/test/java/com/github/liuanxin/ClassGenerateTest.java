@@ -131,6 +131,19 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
             "decimal", "DECIMAL"
     );
+    private static final Map<String, String> DB_DEFAULT_MAP = maps(
+            "TINYINT", "0",
+            "SMALLINT", "0",
+            "MEDIUMINT", "0",
+            "INTEGER", "0",
+            "BIGINT", "0",
+            "DECIMAL", "0",
+
+            "VARCHAR", "''",
+            "VARCHAR", "''",
+            "LONGVARCHAR", "''",
+            "LONGVARCHAR", "''"
+    );
     private static final String TABLE_NAME = "tn";
     private static final String TABLE_COMMENT = "tc";
     private static final String COLUMN_NAME = "cn";
@@ -654,7 +667,14 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             if (jdbcType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
             }
-            sbd.append(tab(4)).append(String.format("#{%s,jdbcType=%s},\n", toField(columnName), jdbcType));
+            String value;
+            String defaultValue = DB_DEFAULT_MAP.get(jdbcType);
+            if (defaultValue != null) {
+                value = String.format("IFNULL(#{%s,jdbcType=%s}, %s),\n", toField(columnName), jdbcType, defaultValue);
+            } else {
+                value = String.format("#{%s,jdbcType=%s},\n", toField(columnName), jdbcType);
+            }
+            sbd.append(tab(4)).append(value);
             sbd.append(tab(3)).append("</if>\n");
         }
         sbd.append(tab(2)).append("</trim>\n");
@@ -714,7 +734,14 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             if (jdbcType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
             }
-            sbd.append(tab(5)).append(String.format("#{item.%s,jdbcType=%s},\n", toField(columnName), jdbcType));
+            String value;
+            String defaultValue = DB_DEFAULT_MAP.get(jdbcType);
+            if (defaultValue != null) {
+                value = String.format("IFNULL(#{%s,jdbcType=%s}, %s),\n", toField(columnName), jdbcType, defaultValue);
+            } else {
+                value = String.format("#{%s,jdbcType=%s},\n", toField(columnName), jdbcType);
+            }
+            sbd.append(tab(5)).append(value);
             sbd.append(tab(4)).append("</if>\n");
         }
         sbd.append(tab(3)).append("</trim>\n");
@@ -771,8 +798,14 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             if (jdbcType == null) {
                 throw new RuntimeException(String.format("column-type(%s) has no jdbc mapping", columnType));
             }
-            String columnName = toStr(column.get(COLUMN_NAME));
-            sbd.append(tab(3)).append(String.format("#{item.%s,jdbcType=%s}", toField(columnName), jdbcType));
+            String value;
+            String defaultValue = DB_DEFAULT_MAP.get(jdbcType);
+            if (defaultValue != null) {
+                value = String.format("IFNULL(#{%s,jdbcType=%s}, %s),\n", toField(toStr(column.get(COLUMN_NAME))), jdbcType);
+            } else {
+                value = String.format("#{%s,jdbcType=%s},\n", toField(toStr(column.get(COLUMN_NAME))), jdbcType);
+            }
+            sbd.append(tab(3)).append(value);
             if (i < columns.size() - 1) {
                 sbd.append(",");
             }
