@@ -91,8 +91,8 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
     private static final Map<String, String> TYPE_MAP = maps(
             "tinyint(1)", "Boolean",
-            "tinyint", "Boolean",
 
+            "tinyint", "Integer",
             "smallint", "Integer",
             "mediumint", "Integer",
             "int", "Integer",
