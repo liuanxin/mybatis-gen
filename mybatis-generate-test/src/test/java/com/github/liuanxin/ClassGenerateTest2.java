@@ -502,12 +502,13 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                 "\n" +
                 xmlSql(handleTableName, false, columns) + "\n" +
                 xmlSql(handleTableName, true, columns) + "\n" +
-                "\n" +
-                xmlInsertOrUpdate(tableName, columns) + "\n" +
-                "\n" +
-                xmlBatchInsert(tableName, columns) + "\n" +
-                "\n" +
-                xmlBatchReplace(tableName, columns) + "\n" +
+                (GENERATE_XML ? (
+                        "\n" +
+                                xmlInsertOrUpdate(tableName, columns) + "\n" +
+                                "\n" +
+                                xmlBatchInsert(tableName, columns) + "\n" +
+                                "\n" +
+                                xmlBatchReplace(tableName, columns) + "\n") : "") +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), content);
     }
