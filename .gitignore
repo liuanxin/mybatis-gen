@@ -18,5 +18,6 @@
 # Mac
 .DS_Store
 
+temp/
 # Maven
 target/

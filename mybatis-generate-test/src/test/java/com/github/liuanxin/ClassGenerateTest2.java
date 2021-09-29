@@ -19,7 +19,7 @@ import java.util.*;
 public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContextTests {
 
     /** 文件生成目录 */
-    private static final String SAVE_PATH = "/home/xx/temp/";
+    private static final String SAVE_PATH = "temp/";
     /** 生成 java 文件的目录 */
     private static final String JAVA_PATH = SAVE_PATH + "java/";
     /** 生成 xml 文件的目录 */
