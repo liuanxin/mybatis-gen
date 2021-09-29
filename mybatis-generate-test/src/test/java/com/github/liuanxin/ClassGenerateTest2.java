@@ -497,18 +497,18 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
                 String.format("<mapper namespace=\"%s\">\n", tableToDao(handleTableName)) +
-                xmlMap(handleTableName, false, columns) + "\n" +
-                xmlMap(handleTableName, true, columns) + "\n" +
-                "\n" +
-                xmlSql(handleTableName, false, columns) + "\n" +
-                xmlSql(handleTableName, true, columns) + "\n" +
-                (GENERATE_XML ? (
+                (GENERATE_XML ? (xmlMap(handleTableName, false, columns) + "\n" +
+                        xmlMap(handleTableName, true, columns) + "\n" +
                         "\n" +
-                                xmlInsertOrUpdate(tableName, columns) + "\n" +
-                                "\n" +
-                                xmlBatchInsert(tableName, columns) + "\n" +
-                                "\n" +
-                                xmlBatchReplace(tableName, columns) + "\n") : "") +
+                        xmlSql(handleTableName, false, columns) + "\n" +
+                        xmlSql(handleTableName, true, columns) + "\n" +
+                        "\n" +
+                        xmlInsertOrUpdate(tableName, columns) + "\n" +
+                        "\n" +
+                        xmlBatchInsert(tableName, columns) + "\n" +
+                        "\n" +
+                        xmlBatchReplace(tableName, columns) + "\n"
+                ) : "") +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), content);
     }
