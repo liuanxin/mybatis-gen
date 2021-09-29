@@ -67,18 +67,22 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final int DUPLICATE_TYPE = 0;
 
     /** true 收集删表语句 */
-    private static final boolean COLLECT_DROP_TABLE = true;
+    private static final boolean COLLECT_DROP_TABLE = false;
     /** true 表示收集所有表的 sql */
     private static final boolean COLLECT_ALL_SQL = true;
-
     /** true 表示收集所有的数据字典 */
     private static final boolean COLLECT_ALL_DB_DICT = true;
+    /** true 表示生成 sql 文件 */
+    private static final boolean GENERATE_SQL = true;
+    /** true 表示生成 markdown 文件 */
+    private static final boolean GENERATE_MD = true;
+    /** true 表示生成自定义的 xml 文件 */
+    private static final boolean GENERATE_XML = false;
+    /** true 表示生成 feign 的 req 和 res 文件 */
+    private static final boolean GENERATE_FEIGN = false;
 
     /** 是否把 tinyint(1) 映射成 Boolean */
     private static final boolean TINYINT1_TO_BOOLEAN = false;
-
-    /** true 表示生成自定义的 xml 文件 */
-    private static final boolean GENERATE_XML = true;
 
     // 上面是配置项, 下面的不用了
 
@@ -185,8 +189,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 dbSbd.append(createSql);
                 mdSbd.append(dbDict);
 
-                feignReq(tableName, tableComment, columns);
-                feignRes(tableName, tableComment, columns);
+                if (GENERATE_FEIGN) {
+                    feignReq(tableName, tableComment, columns);
+                    feignRes(tableName, tableComment, columns);
+                }
                 req(tableName, tableComment, columns);
                 res(tableName, tableComment, columns);
                 service(tableName);
@@ -209,10 +215,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         System.out.println("\"" + Joiner.on("\",\n\"").join(tableList) + "\"");
         System.out.println("========================================");
         if (dbSbd.length() > 0 || mdSbd.length() > 0) {
-            if (dbSbd.length() > 0) {
+            if (GENERATE_SQL && dbSbd.length() > 0) {
                 writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
             }
-            if (mdSbd.length() > 0) {
+            if (GENERATE_MD && mdSbd.length() > 0) {
                 writeFile(new File(SAVE_PATH + "db-dict.md"), "\n" + mdSbd.insert(0, "### 数据库字典\n\n").toString().trim() + "\n\n-----\n");
             }
             System.out.println("========================================");
@@ -258,7 +264,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         sbd.append("\n\n");
         sbd.append("| 序号 | 字段名 | 字段类型 | 是否可空 | 默认值 | 字段说明 |\n");
-        sbd.append("| :--- | :---- | :------ | :------ | :----- | :------ |\n");
+        sbd.append("| :-- | :----- | :------ | :------ | :---- | :------ |\n");
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> column = columns.get(i);
             String columnName = toStr(column.get(COLUMN_NAME));
