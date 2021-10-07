@@ -45,7 +45,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static final String MODEL_SUFFIX = "";
     private static final String DAO_SUFFIX = "Mapper";
     private static final String SERVICE_SUFFIX = "Service";
-    private static final String XML_SUFFIX = "Mapper";
+    private static final String XML_SUFFIX = "";
 
     /**
      * 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
@@ -224,7 +224,9 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                 }
             }
             boolean flag = dir.delete();
-            if (!flag) {
+            if (flag) {
+                System.out.printf("文件(%s)删除成功\n", dir);
+            } else {
                 throw new RuntimeException(String.format("文件(%s)删除失败", dir));
             }
         }
