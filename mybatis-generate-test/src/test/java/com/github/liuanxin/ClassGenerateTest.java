@@ -287,12 +287,16 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 }
             }
 
+            String columnComment = toStr(column.get(COLUMN_COMMENT));
+            if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY))) && columnComment.isEmpty()) {
+                columnComment = "主键";
+            }
             sbd.append("| ").append(i + 1)
                     .append(" | ").append(columnName)
                     .append(" | ").append(columnType)
                     .append(" | ").append("yes".equalsIgnoreCase(isNullable) ? "✔" : "✘")
                     .append(" | ").append(columnDefault.replace(" DEFAULT_GENERATED", ""))
-                    .append(" | ").append(toStr(column.get(COLUMN_COMMENT))).append(" |\n");
+                    .append(" | ").append(columnComment).append(" |\n");
         }
         return sbd.append("\n").toString();
     }
