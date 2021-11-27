@@ -12,7 +12,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored", "SqlNoDataSourceInspection"})
 @ContextConfiguration("/context.xml")
@@ -63,9 +66,9 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     /** true 收集删表语句 */
     private static final boolean COLLECT_DROP_TABLE = false;
     /** true 表示收集所有表的 sql */
-    private static final boolean COLLECT_ALL_SQL = true;
+    private static final boolean COLLECT_ALL_SQL = false;
     /** true 表示收集所有的数据字典 */
-    private static final boolean COLLECT_ALL_DB_DICT = true;
+    private static final boolean COLLECT_ALL_DB_DICT = false;
     /** true 表示生成 sql 文件 */
     private static final boolean GENERATE_SQL = true;
     /** true 表示生成 markdown 文件 */
@@ -73,7 +76,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     /** true 表示生成自定义的 xml 文件 */
     private static final boolean GENERATE_XML = false;
 
-    /** 是否把 tinyint(1) 映射成 Boolean */
+    /** 是否把 tinyint(1) 映射成 Boolean. mysql 8 的版本 tinyint int bigint 设置长度将无效 */
     private static final boolean TINYINT1_TO_BOOLEAN = false;
 
     // 上面是配置项, 下面的不用了
@@ -174,7 +177,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
             if (!GENERATE_TABLES.isEmpty() && GENERATE_TABLES.contains(tableName)) {
-                System.out.printf("%s : %s\n", tableName, tableComment);
+                System.out.printf("表名: %s, 表说明: %s\n", tableName, tableComment);
                 if (COLLECT_DROP_TABLE) {
                     dbSbd.append("DROP TABLE IF EXISTS `").append(tableName).append("`").append(";\n");
                 }
@@ -217,17 +220,24 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
 
     private static void deleteDirectory(File dir) {
         if (dir.exists()) {
-            File[] files = dir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    deleteDirectory(file);
+            if (dir.isDirectory()) {
+                File[] files = dir.listFiles();
+                if (files != null && files.length > 0) {
+                    for (File file : files) {
+                        deleteDirectory(file);
+                    }
                 }
-            }
-            boolean flag = dir.delete();
-            if (flag) {
-                System.out.printf("文件(%s)删除成功\n", dir);
+                boolean flag = dir.delete();
+                if (flag) {
+                    System.out.printf("文件夹(%s)删除成功\n", dir);
+                }
             } else {
-                throw new RuntimeException(String.format("文件(%s)删除失败", dir));
+                boolean flag = dir.delete();
+                if (flag) {
+                    System.out.printf("文件(%s)删除成功\n", dir);
+                } else {
+                    throw new RuntimeException(String.format("文件(%s)删除失败", dir));
+                }
             }
         }
     }

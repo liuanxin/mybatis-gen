@@ -12,8 +12,8 @@
     <bean id="dataSource" class="org.springframework.jdbc.datasource.SingleConnectionDataSource">
         <property name="driverClassName" value="${class}"/>
         <property name="url" value="${conn}"/>
-        <property name="username" value="${user_name}"/>
-        <property name="password" value="${password}"/>
+        <property name="username" value="${name}"/>
+        <property name="password" value="${pass}"/>
     </bean>
 
     <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate" p:dataSource-ref="dataSource"/>
