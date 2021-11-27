@@ -34,10 +34,10 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static final String PROJECT_PACKAGE = PACKAGE + ".xxx";
 
     /** 要生成代码的表名 */
-    private static final Set<String> GENERATE_TABLES = Sets.newHashSet(Arrays.asList(
+    private static final Set<String> GENERATE_TABLES = Sets.newHashSet(
             "t_common",
             "t_user"
-    ));
+    );
 
     private static final String REQ_PACKAGE = PROJECT_PACKAGE + ".req"; // 带 @ApiParam 注解
     private static final String RES_PACKAGE = PROJECT_PACKAGE + ".res"; // 带 @ApiReturn 注解
