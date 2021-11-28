@@ -309,12 +309,13 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
             "%s" +
             "\n" +
             "@Data\n" +
+            "@NoArgsConstructor;\n" +
             "public class %s implements Serializable {\n" +
             "    private static final long serialVersionUID = 1L;\n" +
             "%s" +
             "}\n";
     private static String reqAndRes(String classPackage, String tableName, List<Map<String, Object>> columns, boolean req) {
-        Set<String> importSet = Sets.newHashSet("import lombok.Data;\n");
+        Set<String> importSet = Sets.newHashSet("import lombok.Data;\n", "import lombok.NoArgsConstructor;\n");
         Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
         StringBuilder sbd = new StringBuilder();
         for (Map<String, Object> column : columns) {
@@ -378,13 +379,18 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
             "\n" +
             "/** %s */\n" +
             "@Data\n" +
+            "@NoArgsConstructor\n" +
             "@TableName(\"%s\")\n" +
             "public class %s implements Serializable {\n" +
             "    private static final long serialVersionUID = 1L;\n" +
             "%s" +
             "}\n";
     private static void model(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        Set<String> importSet = Sets.newHashSet("import com.baomidou.mybatisplus.annotation.TableName;\n", "import lombok.Data;\n");
+        Set<String> importSet = Sets.newHashSet(
+                "import com.baomidou.mybatisplus.annotation.TableName;\n",
+                "import lombok.Data;\n",
+                "import lombok.NoArgsConstructor;\n"
+        );
         Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
         StringBuilder sbd = new StringBuilder();
         for (Map<String, Object> column : columns) {
