@@ -81,7 +81,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     /** true 表示生成 feign 的 req 和 res 文件 */
     private static final boolean GENERATE_FEIGN = false;
 
-    /** 是否把 tinyint(1) 映射成 Boolean. mysql 8.0.17 的版本 tinyint int bigint 设置长度将无效 */
+    /** 是否把 tinyint(1) 映射成 Boolean(不要加 unsigned), mysql 8.0.17 之后的版本将会和 tinyint(4) int bigint 的处理一样, 保存时长度将失效 */
     private static final boolean TINYINT1_TO_BOOLEAN = false;
 
     // 上面是配置项, 下面的不用了

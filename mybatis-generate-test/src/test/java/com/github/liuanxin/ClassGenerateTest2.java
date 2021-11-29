@@ -76,8 +76,8 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     /** true 表示生成自定义的 xml 文件 */
     private static final boolean GENERATE_XML = false;
 
-    /** 是否把 tinyint(1) 映射成 Boolean. mysql 8 的版本 tinyint int bigint 设置长度将无效 */
-    private static final boolean TINYINT1_TO_BOOLEAN = false;
+    /** 是否把 tinyint(1) 映射成 Boolean(不要加 unsigned), mysql 8.0.17 之后的版本将会和 tinyint(4) int bigint 的处理一样, 保存时长度将失效 */
+    private static final boolean TINYINT1_TO_BOOLEAN = true;
 
     // 上面是配置项, 下面的不用了
 
