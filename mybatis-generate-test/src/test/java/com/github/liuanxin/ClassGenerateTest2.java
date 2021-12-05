@@ -425,30 +425,37 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
             switch (fieldName) {
                 case "id":
                     importSet.add("import com.baomidou.mybatisplus.annotation.TableId;\n");
-                    sbd.append(tab(1)).append("@TableId\n");
+                    // 使用数据库的 id 生成, 不用其默认的 雪花 id
+                    importSet.add("import com.baomidou.mybatisplus.annotation.IdType;\n");
+                    sbd.append(tab(1)).append("@TableId(type = IdType.AUTO)\n");
                     break;
-                case "createTime":
-                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
-                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
-                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT)\n");
-                    break;
-                case "updateTime":
-                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
-                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
-                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT_UPDATE)\n");
-                    break;
-                case "deleted":
-                case "isDelete":
-                case "isDeleted":
-                case "deleteFlag":
-                case "delFlag":
-                    importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
-                    if (columnType.equalsIgnoreCase("int") || columnType.equalsIgnoreCase("bigint")) {
-                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
-                    } else {
-                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"1\")\n");
-                    }
-                    break;
+//                case "createTime":
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
+//                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT)\n");
+//                    break;
+//                case "updateTime":
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
+//                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT_UPDATE)\n");
+//                    break;
+//                case "deleted":
+//                case "isDelete":
+//                case "isDeleted":
+//                case "deleteFlag":
+//                case "delFlag":
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
+//                    if (columnType.equalsIgnoreCase("int") || columnType.equalsIgnoreCase("bigint")) {
+//                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
+//                    } else {
+//                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"1\")\n");
+//                    }
+//                    break;
+            }
+            // 避免 count index desc 这一类的关键字命名, 用 `` 包一下
+            if (!columnName.contains("_")) {
+                importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
+                sbd.append(tab(1)).append(String.format("@TableField(\"`%s`\")\n", columnName));
             }
             sbd.append(tab(1)).append(String.format("private %s %s;\n", fieldType, fieldName));
             if ("Date".equals(fieldType)) {
