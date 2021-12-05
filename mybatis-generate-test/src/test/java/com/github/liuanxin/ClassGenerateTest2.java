@@ -453,7 +453,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
 //                    break;
             }
             // 避免 count index desc 这一类的关键字命名, 用 `` 包一下
-            if (!columnName.contains("_")) {
+            if (MysqlKeyWord.KEY.contains(columnName.toUpperCase())) {
                 importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
                 sbd.append(tab(1)).append(String.format("@TableField(\"`%s`\")\n", columnName));
             }
