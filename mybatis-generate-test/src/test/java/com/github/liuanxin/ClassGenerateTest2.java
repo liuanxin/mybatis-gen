@@ -497,6 +497,8 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                             "\n" +
                             "    int batchInsert(@Param(\"list\") List<%s> list);\n" +
                             "\n" +
+                            "    int batchUpdate(@Param(\"list\") List<%s> list);\n" +
+                            "\n" +
                             "    int batchReplace(@Param(\"list\") List<%s> list);\n"
             ) : "") +
             "}\n";
@@ -526,6 +528,8 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                         xmlInsertOrUpdate(tableName, columns) + "\n" +
                         "\n" +
                         xmlBatchInsert(tableName, columns) + "\n" +
+                        "\n" +
+                        xmlBatchUpdate(tableName, columns) + "\n" +
                         "\n" +
                         xmlBatchReplace(tableName, columns) + "\n"
                 ) : "") +
@@ -674,6 +678,60 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         sbd.append(tab(3)).append("</trim>\n");
         sbd.append(tab(2)).append("</foreach>\n");
         sbd.append(tab(1)).append("</insert>");
+        return sbd.toString();
+    }
+    private static String xmlBatchUpdate(String tableName, List<Map<String, Object>> columns) {
+        // <update id="batchUpdate" parameterType="list">
+        //   UPDATE `t_xx`
+        //   <trim prefix="SET" suffixOverrides=",">
+        //     <foreach collection="list" index="index" item="item">
+        //       <if test="item.name != null">
+        //         <if test="index == 0"> `name` = ( CASE `id` </if>
+        //         WHEN #{item.id} THEN #{item.name}
+        //         <if test="(index + 1) == list.size"> END ),  </if>
+        //       </if>
+        //     </foreach>
+        //     <foreach ...
+        //   </trim>
+        //   <where>
+        //     `id` IN
+        //     <foreach collection="list" item="item" separator="," open="(" close=")">
+        //       #{item.id}
+        //     </foreach>
+        //   </where>
+        // </update>
+        StringBuilder sbd = new StringBuilder();
+        // UPDATE t_xx SET
+        // `name` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END ),
+        // `sex` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END )
+        // WHERE `id` IN ( 1, 2 )
+        String idColumn = "id";
+        String idField = toField(idColumn);
+        sbd.append(tab(1)).append("<update id=\"batchUpdate\" parameterType=\"list\">\n");
+        sbd.append(tab(2)).append(String.format("UPDATE `%s`\n", tableName));
+
+        sbd.append(tab(2)).append("<trim prefix=\"SET\" suffixOverrides=\",\">\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String fieldName = toField(columnName);
+
+            sbd.append(tab(3)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
+            sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", fieldName));
+            sbd.append(tab(5)).append(String.format("<if test=\"index == 0\">`%s` = ( CASE `%s`</if>\n", columnName, idColumn));
+            sbd.append(tab(5)).append(String.format("WHEN #{item.%s} THEN #{item.%s}\n", idField, fieldName));
+            sbd.append(tab(5)).append("<if test=\"(index + 1) == list.size\">END ),</if>\n");
+            sbd.append(tab(4)).append("</if>");
+            sbd.append(tab(3)).append("</foreach>\n");
+        }
+        sbd.append(tab(2)).append("</trim>\n");
+
+        sbd.append(tab(2)).append("</where>\n");
+        sbd.append(tab(3)).append(String.format("`%s` IN\n", idColumn));
+        sbd.append(tab(3)).append("<foreach collection=\"list\" item=\"item\" separator=\",\" open=\"(\" close=\")\">\n");
+        sbd.append(tab(4)).append(String.format("#{item.%s}\n", idField));
+        sbd.append(tab(3)).append("</foreach>\n");
+        sbd.append(tab(2)).append("</where>\n");
+        sbd.append(tab(1)).append("</update>");
         return sbd.toString();
     }
     private static String xmlBatchReplace(String tableName, List<Map<String, Object>> columns) {
