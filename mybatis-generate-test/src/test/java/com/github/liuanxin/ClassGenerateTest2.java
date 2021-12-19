@@ -187,10 +187,10 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                 req(tableName, columns);
                 res(tableName, columns);
                 service(tableName);
-                model(tableName, tableComment, columns);
+                boolean hasLogicDelete = model(tableName, tableComment, columns);
                 dao(tableName, tableComment);
                 if (GENERATE_XML) {
-                    xml(tableName, columns);
+                    xml(tableName, columns, hasLogicDelete);
                 }
                 System.out.println("========================================");
             } else {
@@ -385,7 +385,8 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
             "    private static final long serialVersionUID = 1L;\n" +
             "%s" +
             "}\n";
-    private static void model(String tableName, String tableComment, List<Map<String, Object>> columns) {
+    private static boolean model(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        boolean hasLogicDelete = false;
         Set<String> importSet = Sets.newHashSet(
                 "import com.baomidou.mybatisplus.annotation.TableName;\n",
                 "import lombok.Data;\n",
@@ -439,18 +440,21 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
 //                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
 //                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT_UPDATE)\n");
 //                    break;
-//                case "deleted":
-//                case "isDelete":
-//                case "isDeleted":
-//                case "deleteFlag":
-//                case "delFlag":
-//                    importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
-//                    if (columnType.equalsIgnoreCase("int") || columnType.equalsIgnoreCase("bigint")) {
-//                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
-//                    } else {
-//                        sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"1\")\n");
-//                    }
-//                    break;
+                case "deleted":
+                case "isDelete":
+                case "isDeleted":
+                case "deleteFlag":
+                case "delFlag":
+                    if (HANDLE_LOGIC_DELETE) {
+                        importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
+                        if (columnType.equalsIgnoreCase("int") || columnType.equalsIgnoreCase("bigint")) {
+                            sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
+                        } else {
+                            sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"1\")\n");
+                        }
+                        hasLogicDelete = true;
+                    }
+                    break;
             }
             // 避免 count index desc 这一类的关键字命名, 用 `` 包一下
             if (MysqlKeyWord.KEY.contains(columnName.toUpperCase())) {
@@ -477,6 +481,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, tableName, modelClass, sbd);
         writeFile(new File(JAVA_PATH + MODEL_PACKAGE.replace(".", "/"), modelClass + ".java"), content);
+        return hasLogicDelete;
     }
 
     private static final String DAO = "package %s;\n" +
@@ -502,6 +507,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                             "    int batchReplace(@Param(\"list\") List<%s> list);\n"
             ) : "") +
             "}\n";
+    @SuppressWarnings("MalformedFormatString")
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
@@ -514,7 +520,15 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         writeFile(new File(JAVA_PATH + DAO_PACKAGE.replace(".", "/"), daoClassName + ".java"), content);
     }
 
-    private static void xml(String tableName, List<Map<String, Object>> columns) {
+    private static void xml(String tableName, List<Map<String, Object>> columns, boolean hasLogicDelete) {
+        String primaryColumn =  "";
+        for (Map<String, Object> column : columns) {
+            if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
+                primaryColumn = toStr(column.get(COLUMN_NAME));
+                break;
+            }
+        }
+
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
@@ -529,9 +543,10 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                         "\n" +
                         xmlBatchInsert(tableName, columns) + "\n" +
                         "\n" +
-                        xmlBatchUpdate(tableName, columns) + "\n" +
+                        xmlBatchUpdate(tableName, columns, primaryColumn) + "\n" +
                         "\n" +
-                        xmlBatchReplace(tableName, columns) + "\n"
+                        xmlBatchReplace(tableName, columns) + "\n" +
+                        ( hasLogicDelete ? ( "\n" + forceDelete(tableName, primaryColumn) + "\n" ) : "" )
                 ) : "") +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), content);
@@ -680,32 +695,12 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
-    private static String xmlBatchUpdate(String tableName, List<Map<String, Object>> columns) {
-        // <update id="batchUpdate" parameterType="list">
-        //   UPDATE `t_xx`
-        //   <trim prefix="SET" suffixOverrides=",">
-        //     <foreach collection="list" index="index" item="item">
-        //       <if test="item.name != null">
-        //         <if test="index == 0"> `name` = ( CASE `id` </if>
-        //         WHEN #{item.id} THEN #{item.name}
-        //         <if test="(index + 1) == list.size"> END ),  </if>
-        //       </if>
-        //     </foreach>
-        //     <foreach ...
-        //   </trim>
-        //   <where>
-        //     `id` IN
-        //     <foreach collection="list" item="item" separator="," open="(" close=")">
-        //       #{item.id}
-        //     </foreach>
-        //   </where>
-        // </update>
-        StringBuilder sbd = new StringBuilder();
+    private static String xmlBatchUpdate(String tableName, List<Map<String, Object>> columns, String idColumn) {
         // UPDATE t_xx SET
         // `name` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END ),
         // `sex` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END )
         // WHERE `id` IN ( 1, 2 )
-        String idColumn = "id";
+        StringBuilder sbd = new StringBuilder();
         String idField = toField(idColumn);
         sbd.append(tab(1)).append("<update id=\"batchUpdate\" parameterType=\"list\">\n");
         sbd.append(tab(2)).append(String.format("UPDATE `%s`\n", tableName));
@@ -773,6 +768,16 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         sbd.append(tab(2)).append("</foreach>\n");
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
+    }
+    private static String forceDelete(String tableName, String idColumn) {
+        // DELETE FROM `t_xx` WHERE `id` IN ( 1, 2 )
+        return tab(1) + "<delete id=\"forceDelete\" parameterType=\"list\">\n" +
+                tab(2) + String.format("DELETE FROM `%s` WHERE `%s` IN\n", tableName, idColumn) +
+                tab(2) + "<foreach collection=\"list\" item=\"item\" separator=\",\" open=\"(\" close=\")\">\n" +
+                tab(3) + String.format("#{item.%s}\n", toField(idColumn)) +
+                tab(2) + "</foreach>\n" +
+                tab(1) + "</delete>\n" +
+                tab(1) + "</delete>";
     }
 
     private static final String SERVICE = "package %s;\n" +
