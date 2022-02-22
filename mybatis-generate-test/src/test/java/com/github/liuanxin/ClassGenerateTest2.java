@@ -502,9 +502,9 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                             "\n" +
                             "    int batchInsert(@Param(\"list\") List<%s> list);\n" +
                             "\n" +
-                            "    int batchUpdate(@Param(\"list\") List<%s> list);\n" +
+                            "    int batchReplace(@Param(\"list\") List<%s> list);\n" +
                             "\n" +
-                            "    int batchReplace(@Param(\"list\") List<%s> list);\n"
+                            "    int batchUpdate(@Param(\"list\") List<%s> list);\n"
             ) : "") +
             "}\n";
     @SuppressWarnings("MalformedFormatString")
@@ -515,7 +515,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         String modelClassPath = tableToModel(handleTableName);
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = GENERATE_XML
-                ? String.format(DAO, DAO_PACKAGE, modelClassPath, comment, daoClassName, modelClassName, modelClassName, modelClassName, modelClassName)
+                ? String.format(DAO, DAO_PACKAGE, modelClassPath, comment, daoClassName, modelClassName, modelClassName, modelClassName, modelClassName, modelClassName)
                 : String.format(DAO, DAO_PACKAGE, modelClassPath, comment, daoClassName, modelClassName);
         writeFile(new File(JAVA_PATH + DAO_PACKAGE.replace(".", "/"), daoClassName + ".java"), content);
     }
@@ -543,9 +543,9 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
                         "\n" +
                         xmlBatchInsert(tableName, columns) + "\n" +
                         "\n" +
-                        xmlBatchUpdate(tableName, columns, primaryColumn) + "\n" +
-                        "\n" +
                         xmlBatchReplace(tableName, columns) + "\n" +
+                        "\n" +
+                        xmlBatchUpdate(tableName, columns, primaryColumn) + "\n" +
                         ( hasLogicDelete ? ( "\n" + forceDelete(tableName, primaryColumn) + "\n" ) : "" )
                 ) : "") +
                 "</mapper>\n";
@@ -695,40 +695,6 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
-    private static String xmlBatchUpdate(String tableName, List<Map<String, Object>> columns, String idColumn) {
-        // UPDATE t_xx SET
-        // `name` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END ),
-        // `sex` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END )
-        // WHERE `id` IN ( 1, 2 )
-        StringBuilder sbd = new StringBuilder();
-        String idField = toField(idColumn);
-        sbd.append(tab(1)).append("<update id=\"batchUpdate\" parameterType=\"list\">\n");
-        sbd.append(tab(2)).append(String.format("UPDATE `%s`\n", tableName));
-
-        sbd.append(tab(2)).append("<trim prefix=\"SET\" suffixOverrides=\",\">\n");
-        for (Map<String, Object> column : columns) {
-            String columnName = toStr(column.get(COLUMN_NAME));
-            String fieldName = toField(columnName);
-
-            sbd.append(tab(3)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
-            sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", fieldName));
-            sbd.append(tab(5)).append(String.format("<if test=\"index == 0\">`%s` = ( CASE `%s`</if>\n", columnName, idColumn));
-            sbd.append(tab(5)).append(String.format("WHEN #{item.%s} THEN #{item.%s}\n", idField, fieldName));
-            sbd.append(tab(5)).append("<if test=\"(index + 1) == list.size\">END ),</if>\n");
-            sbd.append(tab(4)).append("</if>");
-            sbd.append(tab(3)).append("</foreach>\n");
-        }
-        sbd.append(tab(2)).append("</trim>\n");
-
-        sbd.append(tab(2)).append("</where>\n");
-        sbd.append(tab(3)).append(String.format("`%s` IN\n", idColumn));
-        sbd.append(tab(3)).append("<foreach collection=\"list\" item=\"item\" separator=\",\" open=\"(\" close=\")\">\n");
-        sbd.append(tab(4)).append(String.format("#{item.%s}\n", idField));
-        sbd.append(tab(3)).append("</foreach>\n");
-        sbd.append(tab(2)).append("</where>\n");
-        sbd.append(tab(1)).append("</update>");
-        return sbd.toString();
-    }
     private static String xmlBatchReplace(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
         sbd.append(tab(1)).append("<insert id=\"batchReplace\" parameterType=\"map\"" +
@@ -767,6 +733,40 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         sbd.append(tab(3)).append("</trim>\n");
         sbd.append(tab(2)).append("</foreach>\n");
         sbd.append(tab(1)).append("</insert>");
+        return sbd.toString();
+    }
+    private static String xmlBatchUpdate(String tableName, List<Map<String, Object>> columns, String idColumn) {
+        // UPDATE t_xx SET
+        // `name` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END ),
+        // `sex` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END )
+        // WHERE `id` IN ( 1, 2 )
+        StringBuilder sbd = new StringBuilder();
+        String idField = toField(idColumn);
+        sbd.append(tab(1)).append("<update id=\"batchUpdate\" parameterType=\"list\">\n");
+        sbd.append(tab(2)).append(String.format("UPDATE `%s`\n", tableName));
+
+        sbd.append(tab(2)).append("<trim prefix=\"SET\" suffixOverrides=\",\">\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String fieldName = toField(columnName);
+
+            sbd.append(tab(3)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
+            sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", fieldName));
+            sbd.append(tab(5)).append(String.format("<if test=\"index == 0\">`%s` = ( CASE `%s`</if>\n", columnName, idColumn));
+            sbd.append(tab(5)).append(String.format("WHEN #{item.%s} THEN #{item.%s}\n", idField, fieldName));
+            sbd.append(tab(5)).append("<if test=\"(index + 1) == list.size\">END ),</if>\n");
+            sbd.append(tab(4)).append("</if>\n");
+            sbd.append(tab(3)).append("</foreach>\n");
+        }
+        sbd.append(tab(2)).append("</trim>\n");
+
+        sbd.append(tab(2)).append("</where>\n");
+        sbd.append(tab(3)).append(String.format("`%s` IN\n", idColumn));
+        sbd.append(tab(3)).append("<foreach collection=\"list\" item=\"item\" separator=\",\" open=\"(\" close=\")\">\n");
+        sbd.append(tab(4)).append(String.format("#{item.%s}\n", idField));
+        sbd.append(tab(3)).append("</foreach>\n");
+        sbd.append(tab(2)).append("</where>\n");
+        sbd.append(tab(1)).append("</update>");
         return sbd.toString();
     }
     private static String forceDelete(String tableName, String idColumn) {
