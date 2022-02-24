@@ -75,6 +75,10 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static final boolean GENERATE_MD = true;
     /** true 表示生成自定义的 xml 文件 */
     private static final boolean GENERATE_XML = false;
+    /** true 表示生成自定义 xml 文件中的 result 和 sql 内容 */
+    private static final boolean GENERATE_XML_RESULT_SQL = false;
+    /** true 表示处理逻辑删除, 在 deleted,isDelete,isDeleted,deleteFlag,delFlag 字段上标 @TableLogic 注解 */
+    private static final boolean HANDLE_LOGIC_DELETE = false;
 
     /** 是否把 tinyint(1) 映射成 Boolean(不要加 unsigned), mysql 8.0.17 之后的版本将会和 tinyint(4) int bigint 的处理一样, 保存时长度将失效 */
     private static final boolean TINYINT1_TO_BOOLEAN = true;
@@ -533,12 +537,14 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
                 String.format("<mapper namespace=\"%s\">\n", tableToDao(handleTableName)) +
-                (GENERATE_XML ? (xmlMap(handleTableName, false, columns) + "\n" +
-                        xmlMap(handleTableName, true, columns) + "\n" +
-                        "\n" +
-                        xmlSql(handleTableName, false, columns) + "\n" +
-                        xmlSql(handleTableName, true, columns) + "\n" +
-                        "\n" +
+                (GENERATE_XML ? (
+                        (GENERATE_XML_RESULT_SQL ?
+                                (xmlMap(handleTableName, false, columns) + "\n" +
+                                xmlMap(handleTableName, true, columns) + "\n" +
+                                "\n" +
+                                xmlSql(handleTableName, false, columns) + "\n" +
+                                xmlSql(handleTableName, true, columns) + "\n" +
+                                "\n") : "") +
                         xmlInsertOrUpdate(tableName, columns) + "\n" +
                         "\n" +
                         xmlBatchInsert(tableName, columns) + "\n" +
