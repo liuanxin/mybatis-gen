@@ -704,7 +704,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static String xmlBatchReplace(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
         sbd.append(tab(1)).append("<insert id=\"batchReplace\" parameterType=\"map\"" +
-                " keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
+                " keyColumn=\"id\" keyProperty=\"id\">\n");
         sbd.append(tab(2)).append(String.format("REPLACE INTO `%s`\n", tableName));
         sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\" separator=\",\">\n");
         sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
