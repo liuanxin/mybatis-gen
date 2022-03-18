@@ -526,6 +526,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
 
     private static void xml(String tableName, List<Map<String, Object>> columns, boolean hasLogicDelete) {
         String primaryColumn = "";
+        // !多列主键会有问题!
         for (Map<String, Object> column : columns) {
             if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
                 primaryColumn = toStr(column.get(COLUMN_NAME));
