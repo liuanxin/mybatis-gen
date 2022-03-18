@@ -525,7 +525,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     }
 
     private static void xml(String tableName, List<Map<String, Object>> columns, boolean hasLogicDelete) {
-        String primaryColumn =  "";
+        String primaryColumn = "";
         for (Map<String, Object> column : columns) {
             if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
                 primaryColumn = toStr(column.get(COLUMN_NAME));
@@ -537,14 +537,12 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
                 String.format("<mapper namespace=\"%s\">\n", tableToDao(handleTableName)) +
-                (GENERATE_XML ? (
-                        (GENERATE_XML_RESULT_SQL ?
-                                (xmlMap(handleTableName, false, columns) + "\n" +
-                                xmlMap(handleTableName, true, columns) + "\n" +
-                                "\n" +
-                                xmlSql(handleTableName, false, columns) + "\n" +
-                                xmlSql(handleTableName, true, columns) + "\n" +
-                                "\n") : "") +
+                (GENERATE_XML ? (xmlMap(handleTableName, false, columns) + "\n" +
+                        xmlMap(handleTableName, true, columns) + "\n" +
+                        "\n" +
+                        xmlSql(handleTableName, false, columns) + "\n" +
+                        xmlSql(handleTableName, true, columns) + "\n" +
+                        "\n" +
                         xmlInsertOrUpdate(tableName, columns) + "\n" +
                         "\n" +
                         xmlBatchInsert(tableName, columns) + "\n" +
