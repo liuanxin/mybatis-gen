@@ -270,7 +270,7 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
         }
         sbd.append("\n\n");
         sbd.append("| 序号 | 字段名 | 字段类型 | 是否可空 | 默认值 | 字段说明 |\n");
-        sbd.append("| :-- | :----- | :------ | :------ | :---- | :------ |\n");
+        sbd.append("| --- | ------ | ------- | ------- | ----- | ------- |\n");
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> column = columns.get(i);
             String columnName = toStr(column.get(COLUMN_NAME));
