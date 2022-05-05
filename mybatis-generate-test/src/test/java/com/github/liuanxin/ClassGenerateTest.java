@@ -18,6 +18,8 @@ import java.util.*;
 @ContextConfiguration("/context.xml")
 public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextTests {
 
+    // 用 swagger 注解
+
     /** 文件生成目录 */
     private static final String SAVE_PATH = "temp/";
     /** 生成 java 文件的目录 */

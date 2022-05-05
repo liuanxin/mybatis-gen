@@ -21,6 +21,8 @@ import java.util.Set;
 @ContextConfiguration("/context.xml")
 public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContextTests {
 
+    // 用 api-info 注解
+
     /** 文件生成目录 */
     private static final String SAVE_PATH = "temp/";
     /** 生成 java 文件的目录 */
