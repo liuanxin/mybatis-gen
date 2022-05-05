@@ -645,7 +645,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"");
         sbd.append(tableToModel(handleTableName)).append("\"\n");
         sbd.append(tab(3)).append("keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
-        sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
+        sbd.append(tab(2)).append(String.format("INSERT IGNORE INTO `%s`\n", tableName));
 
         sbd.append(tab(2)).append("<trim prefix=\"(\" suffix=\") VALUES\" suffixOverrides=\",\">\n");
         for (Map<String, Object> column : columns) {
