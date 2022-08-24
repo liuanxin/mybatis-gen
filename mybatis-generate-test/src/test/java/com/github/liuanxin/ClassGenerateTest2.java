@@ -90,10 +90,18 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
     private static final String DB = "SELECT DATABASE()";
 
     private static final String ALL_TABLE = "SELECT TABLE_NAME tn, TABLE_COMMENT tc FROM information_schema.`TABLES` WHERE table_schema = ?";
-
     private static final String ALL_COLUMN = "SELECT column_name cn, column_type ct, column_comment cc, column_default cd, " +
             "is_nullable ie, extra, column_key ck FROM information_schema.`COLUMNS` WHERE table_schema = ? AND table_name = ? " +
             "ORDER BY ordinal_position";
+    private static final String TABLE_NAME = "tn";
+    private static final String TABLE_COMMENT = "tc";
+    private static final String COLUMN_NAME = "cn";
+    private static final String COLUMN_TYPE = "ct";
+    private static final String COLUMN_COMMENT = "cc";
+    private static final String COLUMN_DEFAULT = "cd";
+    private static final String IS_NULLABLE = "ie";
+    private static final String EXTRA = "extra";
+    private static final String COLUMN_KEY = "ck";
 
     private static final String CREATE_SQL = "SHOW CREATE TABLE %s";
 
@@ -139,15 +147,6 @@ public class ClassGenerateTest2 extends AbstractTransactionalJUnit4SpringContext
 
             "decimal", "DECIMAL"
     );
-    private static final String TABLE_NAME = "tn";
-    private static final String TABLE_COMMENT = "tc";
-    private static final String COLUMN_NAME = "cn";
-    private static final String COLUMN_TYPE = "ct";
-    private static final String COLUMN_COMMENT = "cc";
-    private static final String COLUMN_DEFAULT = "cd";
-    private static final String EXTRA = "extra";
-    private static final String IS_NULLABLE = "ie";
-    private static final String COLUMN_KEY = "ck";
 
     private static final int WRAP_COUNT = 5;
     private static final int ALIAS_WRAP_COUNT = 2;
