@@ -12,13 +12,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings({"unchecked", "ResultOfMethodCallIgnored", "SqlNoDataSourceInspection"})
 @ContextConfiguration("/context.xml")
-public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextTests {
+public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringContextTests {
 
-    // 用 swagger 注解
+    // 用 api-info 注解
 
     /** 文件生成目录 */
     private static final String SAVE_PATH = "temp/";
@@ -31,29 +34,23 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     private static final String PACKAGE = "com.github";
     /** 生成 java 文件(dao、entity、req、res、service)的包名 */
     private static final String PROJECT_PACKAGE = PACKAGE + ".xxx";
-    /** 生成 feign java 文件的包名 */
-    private static final String FEIGN_PACKAGE = PACKAGE + ".client.xxx";
 
     /** 要生成代码的表名 */
-    private static final Set<String> GENERATE_TABLES = Sets.newHashSet(Arrays.asList(
+    private static final Set<String> GENERATE_TABLES = Sets.newHashSet(
             "t_common",
-            "t_user",
-            "t_product"
-    ));
+            "t_user"
+    );
 
-    private static final String FEIGN_REQ_PACKAGE = FEIGN_PACKAGE + ".req"; // 带 @JsonProperty 注解
-    private static final String FEIGN_RES_PACKAGE = FEIGN_PACKAGE + ".res"; // 带 @JsonProperty 注解
-
-    private static final String REQ_PACKAGE = PROJECT_PACKAGE + ".req"; // 带 @JsonProperty 和 @ApiModelProperty 注解
-    private static final String RES_PACKAGE = PROJECT_PACKAGE + ".res"; // 带 @JsonProperty 和 @ApiModelProperty 注解
-    private static final String MODEL_PACKAGE = PROJECT_PACKAGE + ".entity"; // 只有表和字段注释
-    private static final String DAO_PACKAGE = PROJECT_PACKAGE + ".dao";
+    private static final String REQ_PACKAGE = PROJECT_PACKAGE + ".req"; // 带 @ApiParam 注解
+    private static final String RES_PACKAGE = PROJECT_PACKAGE + ".res"; // 带 @ApiReturn 注解
+    private static final String MODEL_PACKAGE = PROJECT_PACKAGE + ".model"; // 只有表和字段注释
+    private static final String DAO_PACKAGE = PROJECT_PACKAGE + ".repository";
     private static final String SERVICE_PACKAGE = PROJECT_PACKAGE + ".service";
 
-    private static final String MODEL_SUFFIX = "Entity";
-    private static final String DAO_SUFFIX = "Dao";
+    private static final String MODEL_SUFFIX = "";
+    private static final String DAO_SUFFIX = "Mapper";
     private static final String SERVICE_SUFFIX = "Service";
-    private static final String XML_SUFFIX = "Mapper";
+    private static final String XML_SUFFIX = "";
 
     /**
      * 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
@@ -71,20 +68,22 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
     /** true 收集删表语句 */
     private static final boolean COLLECT_DROP_TABLE = false;
     /** true 表示收集所有表的 sql */
-    private static final boolean COLLECT_ALL_SQL = true;
+    private static final boolean COLLECT_ALL_SQL = false;
     /** true 表示收集所有的数据字典 */
-    private static final boolean COLLECT_ALL_DB_DICT = true;
+    private static final boolean COLLECT_ALL_DB_DICT = false;
     /** true 表示生成 sql 文件 */
     private static final boolean GENERATE_SQL = true;
     /** true 表示生成 markdown 文件 */
     private static final boolean GENERATE_MD = true;
     /** true 表示生成自定义的 xml 文件 */
     private static final boolean GENERATE_XML = false;
-    /** true 表示生成 feign 的 req 和 res 文件 */
-    private static final boolean GENERATE_FEIGN = false;
+    /** true 表示生成自定义 xml 文件中的 result 和 sql 内容 */
+    private static final boolean GENERATE_XML_RESULT_SQL = false;
+    /** true 表示处理逻辑删除, 在 deleted,isDelete,isDeleted,deleteFlag,delFlag 字段上标 @TableLogic 注解 */
+    private static final boolean HANDLE_LOGIC_DELETE = false;
 
     /** 是否把 tinyint(1) 映射成 Boolean(不要加 unsigned), mysql 8.0.17 之后的版本将会和 tinyint(4) int bigint 的处理一样, 保存时长度将失效 */
-    private static final boolean TINYINT1_TO_BOOLEAN = false;
+    private static final boolean TINYINT1_TO_BOOLEAN = true;
 
     // 上面是配置项, 下面的不用了
 
@@ -183,23 +182,21 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
 
             String dbDict = generateDbDict(tableName, tableComment, columns);
             if (!GENERATE_TABLES.isEmpty() && GENERATE_TABLES.contains(tableName)) {
-                System.out.printf("%s : %s\n", tableName, tableComment);
+                System.out.printf("表名: %s, 表说明: %s\n", tableName, tableComment);
                 if (COLLECT_DROP_TABLE) {
                     dbSbd.append("DROP TABLE IF EXISTS `").append(tableName).append("`").append(";\n");
                 }
                 dbSbd.append(createSql);
                 mdSbd.append(dbDict);
 
-                if (GENERATE_FEIGN) {
-                    feignReq(tableName, tableComment, columns);
-                    feignRes(tableName, tableComment, columns);
-                }
-                req(tableName, tableComment, columns);
-                res(tableName, tableComment, columns);
+                req(tableName, columns);
+                res(tableName, columns);
                 service(tableName);
-                model(tableName, tableComment, columns);
+                boolean hasLogicDelete = model(tableName, tableComment, columns);
                 dao(tableName, tableComment);
-                xml(tableName, columns);
+                if (GENERATE_XML) {
+                    xml(tableName, columns, hasLogicDelete);
+                }
                 System.out.println("========================================");
             } else {
                 if (COLLECT_ALL_SQL) {
@@ -220,8 +217,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                 writeFile(new File(SAVE_PATH + dbName + ".sql"), "\n" + dbSbd.toString().trim() + "\n");
             }
             if (GENERATE_MD && mdSbd.length() > 0) {
-                mdSbd.insert(0, "### 数据库字典\n\n");
-                writeFile(new File(SAVE_PATH + dbName + ".md"), "\n" + mdSbd.toString().trim() + "\n\n-----\n");
+                writeFile(new File(SAVE_PATH + "db-dict.md"), "\n" + mdSbd.insert(0, "### 数据库字典\n\n").toString().trim() + "\n\n-----\n");
             }
             System.out.println("========================================");
         }
@@ -275,7 +271,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         }
         sbd.append("\n\n");
         sbd.append("| 序号 | 字段名 | 字段类型 | 是否可空 | 默认值 | 字段说明 |\n");
-        sbd.append("| :-- | :----- | :------ | :------ | :---- | :------ |\n");
+        sbd.append("| --- | ------ | ------- | ------- | ----- | ------- |\n");
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> column = columns.get(i);
             String columnName = toStr(column.get(COLUMN_NAME));
@@ -318,13 +314,13 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "%s" +
             "\n" +
             "@Data\n" +
-            "@ApiModel(\"%s\")\n" +
+            "@NoArgsConstructor;\n" +
             "public class %s implements Serializable {\n" +
             "    private static final long serialVersionUID = 1L;\n" +
             "%s" +
             "}\n";
-    private static String reqAndRes(String classPackage, String tableName, String tableComment, List<Map<String, Object>> columns) {
-        Set<String> importSet = Sets.newHashSet("import io.swagger.annotations.ApiModel;\n", "import lombok.Data;\n");
+    private static String reqAndRes(String classPackage, String tableName, List<Map<String, Object>> columns, boolean req) {
+        Set<String> importSet = Sets.newHashSet("import lombok.Data;\n", "import lombok.NoArgsConstructor;\n");
         Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
         StringBuilder sbd = new StringBuilder();
         for (Map<String, Object> column : columns) {
@@ -341,12 +337,13 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             sbd.append("\n");
             String fieldName = toField(columnName);
             if (!"".equals(columnComment)) {
-                sbd.append(tab(1)).append("@ApiModelProperty(\"").append(replaceQuote(columnComment)).append("\")\n");
-                importSet.add("import io.swagger.annotations.ApiModelProperty;\n");
-            }
-            if (!columnName.equals(fieldName)) {
-                sbd.append(tab(1)).append("@JsonProperty(\"").append(columnName).append("\")\n");
-                importSet.add("import com.fasterxml.jackson.annotation.JsonProperty;\n");
+                if (req) {
+                    sbd.append(tab(1)).append("@ApiParam(\"").append(replaceQuote(columnComment)).append("\")\n");
+                    importSet.add("import com.github.liuanxin.api.annotation.ApiParam;\n");
+                } else {
+                    sbd.append(tab(1)).append("@ApiReturn(\"").append(replaceQuote(columnComment)).append("\")\n");
+                    importSet.add("import com.github.liuanxin.api.annotation.ApiReturn;\n");
+                }
             }
             String fieldType = TYPE_MAP.get(columnType.toLowerCase());
             if (fieldType == null) {
@@ -367,89 +364,17 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         List<String> javaList = Lists.newArrayList(javaImportSet);
         Collections.sort(javaList);
         String javaJoin = Joiner.on("").join(javaList);
-        return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, replaceQuote(tableComment), toClass(tableName), sbd);
+        return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, toClass(tableName), sbd);
     }
-    private static void req(String tableName, String tableComment, List<Map<String, Object>> columns) {
+    private static void req(String tableName, List<Map<String, Object>> columns) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String comment = tableComment == null || tableComment.trim().isEmpty() ? "入参" : (tableComment + " -- 入参");
-        String content = reqAndRes(REQ_PACKAGE, tableName + "_req", comment, columns);
+        String content = reqAndRes(REQ_PACKAGE, tableName + "_req", columns, true);
         writeFile(new File(JAVA_PATH + REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
-    private static void res(String tableName, String tableComment, List<Map<String, Object>> columns) {
+    private static void res(String tableName, List<Map<String, Object>> columns) {
         tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String comment = tableComment == null || tableComment.trim().isEmpty() ? "出参" : (tableComment + " -- 出参");
-        String content = reqAndRes(RES_PACKAGE, tableName + "_res", comment, columns);
+        String content = reqAndRes(RES_PACKAGE, tableName + "_res", columns, false);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
-    }
-
-    private static final String FEIGN_REQ_RES = "package %s;\n" +
-            "\n" +
-            "%s\n" +
-            "%s" +
-            "\n" +
-            "/** %s */\n" +
-            "@Data\n" +
-            "public class %s implements Serializable {\n" +
-            "    private static final long serialVersionUID = 1L;\n" +
-            "%s" +
-            "}\n";
-    private static String feignReqAndRes(String classPackage, String tableName, String tableComment, List<Map<String, Object>> columns) {
-        Set<String> importSet = Sets.newHashSet("import lombok.Data;\n");
-        Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
-        StringBuilder sbd = new StringBuilder();
-        for (Map<String, Object> column : columns) {
-            String columnName = toStr(column.get(COLUMN_NAME));
-            String columnType = toStr(column.get(COLUMN_TYPE));
-            if (columnType.contains(" ")) {
-                columnType = columnType.substring(0, columnType.indexOf(" "));
-            }
-            if (!(TINYINT1_TO_BOOLEAN && "tinyint(1)".equalsIgnoreCase(columnType))) {
-                columnType = (columnType.contains("(") ? columnType.substring(0, columnType.indexOf("(")) : columnType);
-            }
-
-            String columnComment = toStr(column.get(COLUMN_COMMENT));
-
-            sbd.append("\n");
-            String fieldName = toField(columnName);
-            if (!"".equals(columnComment)) {
-                sbd.append(tab(1)).append("/** ").append(columnComment).append(" */\n");
-            }
-            if (!columnName.equals(fieldName)) {
-                sbd.append(tab(1)).append("@JsonProperty(\"").append(columnName).append("\")\n");
-                importSet.add("import com.fasterxml.jackson.annotation.JsonProperty;\n");
-            }
-            String fieldType = TYPE_MAP.get(columnType.toLowerCase());
-            if (fieldType == null) {
-                throw new RuntimeException(String.format("column-type(%s) has no field mapping", columnType));
-            }
-            sbd.append(tab(1)).append("private ").append(fieldType).append(" ").append(fieldName).append(";\n");
-            if ("Date".equals(fieldType)) {
-                javaImportSet.add("import java.util.Date;\n");
-            } else if ("BigDecimal".equals(fieldType)) {
-                javaImportSet.add("import java.math.BigDecimal;\n");
-            }
-        }
-
-        List<String> noJavaList = Lists.newArrayList(importSet);
-        Collections.sort(noJavaList);
-        String noJavaJoin = Joiner.on("").join(noJavaList);
-
-        List<String> javaList = Lists.newArrayList(javaImportSet);
-        Collections.sort(javaList);
-        String javaJoin = Joiner.on("").join(javaList);
-        return String.format(FEIGN_REQ_RES, classPackage, noJavaJoin, javaJoin, tableComment, toClass(tableName), sbd);
-    }
-    private static void feignReq(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String comment = tableComment == null || tableComment.trim().isEmpty() ? "feign 入参" : (tableComment + " -- feign 入参");
-        String content = feignReqAndRes(FEIGN_REQ_PACKAGE, tableName + "_feign_req", comment, columns);
-        writeFile(new File(JAVA_PATH + FEIGN_REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_req") + ".java"), content);
-    }
-    private static void feignRes(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String comment = tableComment == null || tableComment.trim().isEmpty() ? "feign 出参" : (tableComment + " -- feign 出参");
-        String content = feignReqAndRes(FEIGN_RES_PACKAGE, tableName + "_feign_res", comment, columns);
-        writeFile(new File(JAVA_PATH + FEIGN_RES_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_res") + ".java"), content);
     }
 
     private static final String MODEL = "package %s;\n" +
@@ -459,13 +384,19 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             "\n" +
             "/** %s */\n" +
             "@Data\n" +
+            "@NoArgsConstructor\n" +
             "@TableName(\"%s\")\n" +
             "public class %s implements Serializable {\n" +
             "    private static final long serialVersionUID = 1L;\n" +
             "%s" +
             "}\n";
-    private static void model(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        Set<String> importSet = Sets.newHashSet("import com.baomidou.mybatisplus.annotation.TableName;\n", "import lombok.Data;\n");
+    private static boolean model(String tableName, String tableComment, List<Map<String, Object>> columns) {
+        boolean hasLogicDelete = false;
+        Set<String> importSet = Sets.newHashSet(
+                "import com.baomidou.mybatisplus.annotation.TableName;\n",
+                "import lombok.Data;\n",
+                "import lombok.NoArgsConstructor;\n"
+        );
         Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
         StringBuilder sbd = new StringBuilder();
         for (Map<String, Object> column : columns) {
@@ -500,25 +431,40 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             switch (fieldName) {
                 case "id":
                     importSet.add("import com.baomidou.mybatisplus.annotation.TableId;\n");
-                    sbd.append(tab(1)).append("@TableId\n");
+                    // 使用数据库的 id 生成, 不用其默认的 雪花 id
+                    importSet.add("import com.baomidou.mybatisplus.annotation.IdType;\n");
+                    sbd.append(tab(1)).append("@TableId(type = IdType.AUTO)\n");
                     break;
-                case "createTime":
-                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
-                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
-                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT)\n");
-                    break;
-                case "updateTime":
-                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
-                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
-                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT_UPDATE)\n");
-                    break;
+//                case "createTime":
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
+//                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT)\n");
+//                    break;
+//                case "updateTime":
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
+//                    importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
+//                    sbd.append(tab(1)).append("@TableField(fill = FieldFill.INSERT_UPDATE)\n");
+//                    break;
                 case "deleted":
                 case "isDelete":
+                case "isDeleted":
                 case "deleteFlag":
                 case "delFlag":
-                    importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
-                    sbd.append(tab(1)).append("@TableLogic // (value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
+                    if (HANDLE_LOGIC_DELETE) {
+                        importSet.add("import com.baomidou.mybatisplus.annotation.TableLogic;\n");
+                        if (columnType.equalsIgnoreCase("int") || columnType.equalsIgnoreCase("bigint")) {
+                            sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"UNIX_TIMESTAMP()\")\n");
+                        } else {
+                            sbd.append(tab(1)).append("@TableLogic(value = \"0\", delval = \"1\")\n");
+                        }
+                        hasLogicDelete = true;
+                    }
                     break;
+            }
+            // 避免 count index desc 这一类的关键字命名, 用 `` 包一下
+            if (MysqlKeyWord.KEY.contains(columnName.toUpperCase())) {
+                importSet.add("import com.baomidou.mybatisplus.annotation.TableField;\n");
+                sbd.append(tab(1)).append(String.format("@TableField(\"`%s`\")\n", columnName));
             }
             sbd.append(tab(1)).append(String.format("private %s %s;\n", fieldType, fieldName));
             if ("Date".equals(fieldType)) {
@@ -540,6 +486,7 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, tableName, modelClass, sbd);
         writeFile(new File(JAVA_PATH + MODEL_PACKAGE.replace(".", "/"), modelClass + ".java"), content);
+        return hasLogicDelete;
     }
 
     private static final String DAO = "package %s;\n" +
@@ -558,11 +505,14 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                     "\n" +
                             "    int insertOrUpdate(%s record);\n" +
                             "\n" +
-                            "    int batchInsertOrUpdate(%s record);\n" +
+                            "    int batchInsert(@Param(\"list\") List<%s> list);\n" +
                             "\n" +
-                            "    int batchInsert(@Param(\"list\") List<%s> list);\n"
+                            "    int batchReplace(@Param(\"list\") List<%s> list);\n" +
+                            "\n" +
+                            "    int batchUpdate(@Param(\"list\") List<%s> list);\n"
             ) : "") +
             "}\n";
+    @SuppressWarnings("MalformedFormatString")
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
@@ -570,12 +520,21 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         String modelClassPath = tableToModel(handleTableName);
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = GENERATE_XML
-                ? String.format(DAO, DAO_PACKAGE, modelClassPath, comment, daoClassName, modelClassName, modelClassName, modelClassName, modelClassName)
+                ? String.format(DAO, DAO_PACKAGE, modelClassPath, comment, daoClassName, modelClassName, modelClassName, modelClassName, modelClassName, modelClassName)
                 : String.format(DAO, DAO_PACKAGE, modelClassPath, comment, daoClassName, modelClassName);
         writeFile(new File(JAVA_PATH + DAO_PACKAGE.replace(".", "/"), daoClassName + ".java"), content);
     }
 
-    private static void xml(String tableName, List<Map<String, Object>> columns) {
+    private static void xml(String tableName, List<Map<String, Object>> columns, boolean hasLogicDelete) {
+        String primaryColumn = "";
+        // !多列主键会有问题!
+        for (Map<String, Object> column : columns) {
+            if ("pri".equalsIgnoreCase(toStr(column.get(COLUMN_KEY)))) {
+                primaryColumn = toStr(column.get(COLUMN_NAME));
+                break;
+            }
+        }
+
         String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
@@ -590,7 +549,10 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
                         "\n" +
                         xmlBatchInsert(tableName, columns) + "\n" +
                         "\n" +
-                        xmlBatchInsertOrUpdate(tableName, columns) + "\n"
+                        xmlBatchReplace(tableName, columns) + "\n" +
+                        "\n" +
+                        xmlBatchUpdate(tableName, columns, primaryColumn) + "\n" +
+                        ( hasLogicDelete ? ( "\n" + forceDelete(tableName, primaryColumn) + "\n" ) : "" )
                 ) : "") +
                 "</mapper>\n";
         writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), content);
@@ -739,11 +701,11 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
     }
-    private static String xmlBatchInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
+    private static String xmlBatchReplace(String tableName, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
-        sbd.append(tab(1)).append("<insert id=\"batchInsertOrUpdate\" parameterType=\"map\"" +
-                " keyColumn=\"id\" keyProperty=\"id\" useGeneratedKeys=\"true\">\n");
-        sbd.append(tab(2)).append(String.format("INSERT INTO `%s`\n", tableName));
+        sbd.append(tab(1)).append("<insert id=\"batchReplace\" parameterType=\"map\"" +
+                " keyColumn=\"id\" keyProperty=\"id\">\n");
+        sbd.append(tab(2)).append(String.format("REPLACE INTO `%s`\n", tableName));
         sbd.append(tab(2)).append("<foreach collection=\"list\" index=\"index\" item=\"item\" separator=\",\">\n");
         sbd.append(tab(3)).append("<if test=\"index == 0\">\n");
         sbd.append(tab(4)).append("<trim prefix=\"(\" suffix=\") VALUES\" suffixOverrides=\",\">\n");
@@ -775,32 +737,53 @@ public class ClassGenerateTest extends AbstractTransactionalJUnit4SpringContextT
             sbd.append(tab(4)).append("</if>\n");
         }
         sbd.append(tab(3)).append("</trim>\n");
-
-        String duplicate = (DUPLICATE_TYPE == 1) ? "AS new ON DUPLICATE KEY UPDATE" : "ON DUPLICATE KEY UPDATE";
-        sbd.append(tab(3)).append("<if test=\"(index + 1) == list.size\">\n");
-        sbd.append(tab(4)).append(String.format("<trim prefix=\"%s\" suffixOverrides=\",\">\n", duplicate));
-        for (Map<String, Object> column : columns) {
-            String columnName = toStr(column.get(COLUMN_NAME));
-            sbd.append(tab(5)).append(String.format("<if test=\"item.%s != null\">\n", toField(columnName)));
-            String toColumn = toColumn(null, columnName, false);
-            // 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
-            String values;
-            if (DUPLICATE_TYPE == 1) {
-                values = String.format("new.`%s`", toColumn);
-            } else if (DUPLICATE_TYPE == 2) {
-                values = String.format("VALUE(`%s`)", toColumn);
-            } else {
-                values = String.format("VALUES(`%s`)", toColumn);
-            }
-            sbd.append(tab(6)).append(String.format("`%s` = %s,\n", toColumn, values));
-            sbd.append(tab(5)).append("</if>\n");
-        }
-        sbd.append(tab(4)).append("</trim>\n");
-        sbd.append(tab(3)).append("</if>\n");
-
         sbd.append(tab(2)).append("</foreach>\n");
         sbd.append(tab(1)).append("</insert>");
         return sbd.toString();
+    }
+    private static String xmlBatchUpdate(String tableName, List<Map<String, Object>> columns, String idColumn) {
+        // UPDATE t_xx SET
+        // `name` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END ),
+        // `sex` = ( CASE `id`  WHEN 1 THEN 'a'  WHEN 2 THEN 'b' END )
+        // WHERE `id` IN ( 1, 2 )
+        StringBuilder sbd = new StringBuilder();
+        String idField = toField(idColumn);
+        sbd.append(tab(1)).append("<update id=\"batchUpdate\" parameterType=\"list\">\n");
+        sbd.append(tab(2)).append(String.format("UPDATE `%s`\n", tableName));
+
+        sbd.append(tab(2)).append("<trim prefix=\"SET\" suffixOverrides=\",\">\n");
+        for (Map<String, Object> column : columns) {
+            String columnName = toStr(column.get(COLUMN_NAME));
+            String fieldName = toField(columnName);
+
+            sbd.append(tab(3)).append("<foreach collection=\"list\" index=\"index\" item=\"item\">\n");
+            sbd.append(tab(4)).append(String.format("<if test=\"item.%s != null\">\n", fieldName));
+            sbd.append(tab(5)).append(String.format("<if test=\"index == 0\">`%s` = ( CASE `%s`</if>\n", columnName, idColumn));
+            sbd.append(tab(5)).append(String.format("WHEN #{item.%s} THEN #{item.%s}\n", idField, fieldName));
+            sbd.append(tab(5)).append("<if test=\"(index + 1) == list.size\">END ),</if>\n");
+            sbd.append(tab(4)).append("</if>\n");
+            sbd.append(tab(3)).append("</foreach>\n");
+        }
+        sbd.append(tab(2)).append("</trim>\n");
+
+        sbd.append(tab(2)).append("</where>\n");
+        sbd.append(tab(3)).append(String.format("`%s` IN\n", idColumn));
+        sbd.append(tab(3)).append("<foreach collection=\"list\" item=\"item\" separator=\",\" open=\"(\" close=\")\">\n");
+        sbd.append(tab(4)).append(String.format("#{item.%s}\n", idField));
+        sbd.append(tab(3)).append("</foreach>\n");
+        sbd.append(tab(2)).append("</where>\n");
+        sbd.append(tab(1)).append("</update>");
+        return sbd.toString();
+    }
+    private static String forceDelete(String tableName, String idColumn) {
+        // DELETE FROM `t_xx` WHERE `id` IN ( 1, 2 )
+        return tab(1) + "<delete id=\"forceDelete\" parameterType=\"list\">\n" +
+                tab(2) + String.format("DELETE FROM `%s` WHERE `%s` IN\n", tableName, idColumn) +
+                tab(2) + "<foreach collection=\"list\" item=\"item\" separator=\",\" open=\"(\" close=\")\">\n" +
+                tab(3) + String.format("#{item.%s}\n", toField(idColumn)) +
+                tab(2) + "</foreach>\n" +
+                tab(1) + "</delete>\n" +
+                tab(1) + "</delete>";
     }
 
     private static final String SERVICE = "package %s;\n" +
