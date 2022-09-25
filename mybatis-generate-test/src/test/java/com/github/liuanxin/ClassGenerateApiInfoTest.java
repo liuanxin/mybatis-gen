@@ -369,12 +369,12 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
         return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, toClass(tableName), sbd);
     }
     private static void req(String tableName, List<Map<String, Object>> columns) {
-        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String content = reqAndRes(REQ_PACKAGE, tableName + "_req", columns, true);
         writeFile(new File(JAVA_PATH + REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
     private static void res(String tableName, List<Map<String, Object>> columns) {
-        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String content = reqAndRes(RES_PACKAGE, tableName + "_res", columns, false);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
     }
@@ -483,7 +483,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
         List<String> javaList = Lists.newArrayList(javaImportSet);
         Collections.sort(javaList);
         String javaJoin = Joiner.on("").join(javaList);
-        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String modelClass = toClass(handleTableName) + MODEL_SUFFIX;
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, tableName, modelClass, sbd);
@@ -516,7 +516,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             "}\n";
     @SuppressWarnings("MalformedFormatString")
     private static void dao(String tableName, String tableComment) {
-        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
         String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
         String modelClassPath = tableToModel(handleTableName);
@@ -537,7 +537,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             }
         }
 
-        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sbd.append("<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n");
@@ -609,7 +609,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
         return sbd.append(columnBuilder.toString().trim()).append("\n").append(tab(1)).append("</sql>").toString();
     }
     private static String xmlInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
-        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"");
         sbd.append(tableToModel(handleTableName)).append("\"\n");
@@ -866,7 +866,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             "    }\n" +
             "}\n";
     private static void service(String tableName) {
-        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + DAO_SUFFIX)
                 .replace("$$entity$$", toClass(tableName) + MODEL_SUFFIX);
         String content = String.format(serviceInfo,
