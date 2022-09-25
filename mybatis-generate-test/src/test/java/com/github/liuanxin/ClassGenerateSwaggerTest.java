@@ -372,13 +372,13 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, replaceQuote(tableComment), toClass(tableName), sbd);
     }
     private static void req(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length() : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String comment = tableComment == null || tableComment.trim().isEmpty() ? "入参" : (tableComment + " -- 入参");
         String content = reqAndRes(REQ_PACKAGE, tableName + "_req", comment, columns);
         writeFile(new File(JAVA_PATH + REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
     private static void res(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length() : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String comment = tableComment == null || tableComment.trim().isEmpty() ? "出参" : (tableComment + " -- 出参");
         String content = reqAndRes(RES_PACKAGE, tableName + "_res", comment, columns);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
@@ -448,7 +448,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         writeFile(new File(JAVA_PATH + FEIGN_REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_req") + ".java"), content);
     }
     private static void feignRes(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length() : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
         String comment = tableComment == null || tableComment.trim().isEmpty() ? "feign 出参" : (tableComment + " -- feign 出参");
         String content = feignReqAndRes(FEIGN_RES_PACKAGE, tableName + "_feign_res", comment, columns);
         writeFile(new File(JAVA_PATH + FEIGN_RES_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_res") + ".java"), content);
