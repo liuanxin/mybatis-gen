@@ -54,6 +54,8 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
     private static final String DAO_SUFFIX = "Dao";
     private static final String SERVICE_SUFFIX = "Service";
     private static final String XML_SUFFIX = "Mapper";
+    
+    private static final String TABLE_PREFIX = "t_";
 
     /**
      * 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
@@ -370,13 +372,13 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, replaceQuote(tableComment), toClass(tableName), sbd);
     }
     private static void req(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String comment = tableComment == null || tableComment.trim().isEmpty() ? "入参" : (tableComment + " -- 入参");
         String content = reqAndRes(REQ_PACKAGE, tableName + "_req", comment, columns);
         writeFile(new File(JAVA_PATH + REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
     private static void res(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String comment = tableComment == null || tableComment.trim().isEmpty() ? "出参" : (tableComment + " -- 出参");
         String content = reqAndRes(RES_PACKAGE, tableName + "_res", comment, columns);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
@@ -440,13 +442,13 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         return String.format(FEIGN_REQ_RES, classPackage, noJavaJoin, javaJoin, tableComment, toClass(tableName), sbd);
     }
     private static void feignReq(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String comment = tableComment == null || tableComment.trim().isEmpty() ? "feign 入参" : (tableComment + " -- feign 入参");
         String content = feignReqAndRes(FEIGN_REQ_PACKAGE, tableName + "_feign_req", comment, columns);
         writeFile(new File(JAVA_PATH + FEIGN_REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_req") + ".java"), content);
     }
     private static void feignRes(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String comment = tableComment == null || tableComment.trim().isEmpty() ? "feign 出参" : (tableComment + " -- feign 出参");
         String content = feignReqAndRes(FEIGN_RES_PACKAGE, tableName + "_feign_res", comment, columns);
         writeFile(new File(JAVA_PATH + FEIGN_RES_PACKAGE.replace(".", "/"), toClass(tableName + "_feign_res") + ".java"), content);
@@ -535,7 +537,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         List<String> javaList = Lists.newArrayList(javaImportSet);
         Collections.sort(javaList);
         String javaJoin = Joiner.on("").join(javaList);
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String modelClass = toClass(handleTableName) + MODEL_SUFFIX;
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, tableName, modelClass, sbd);
@@ -564,7 +566,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
             ) : "") +
             "}\n";
     private static void dao(String tableName, String tableComment) {
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
         String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
         String modelClassPath = tableToModel(handleTableName);
@@ -576,7 +578,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
     }
 
     private static void xml(String tableName, List<Map<String, Object>> columns) {
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
                 String.format("<mapper namespace=\"%s\">\n", tableToDao(handleTableName)) +
@@ -641,7 +643,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         return sbd.append(columnBuilder.toString().trim()).append("\n").append(tab(1)).append("</sql>").toString();
     }
     private static String xmlInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"");
         sbd.append(tableToModel(handleTableName)).append("\"\n");
@@ -877,7 +879,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
             "    }\n" +
             "}\n";
     private static void service(String tableName) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + DAO_SUFFIX)
                 .replace("$$entity$$", toClass(tableName) + MODEL_SUFFIX);
         String content = String.format(serviceInfo,

@@ -85,6 +85,8 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
     /** 是否把 tinyint(1) 映射成 Boolean(不要加 unsigned), mysql 8.0.17 之后的版本将会和 tinyint(4) int bigint 的处理一样, 保存时长度将失效 */
     private static final boolean TINYINT1_TO_BOOLEAN = true;
 
+    private static final String TABLE_PREFIX = "t_";
+
     // 上面是配置项, 下面的不用了
 
     private static final String DB = "SELECT DATABASE()";
@@ -367,12 +369,12 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
         return String.format(REQ_RES, classPackage, noJavaJoin, javaJoin, toClass(tableName), sbd);
     }
     private static void req(String tableName, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String content = reqAndRes(REQ_PACKAGE, tableName + "_req", columns, true);
         writeFile(new File(JAVA_PATH + REQ_PACKAGE.replace(".", "/"), toClass(tableName + "_req") + ".java"), content);
     }
     private static void res(String tableName, List<Map<String, Object>> columns) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String content = reqAndRes(RES_PACKAGE, tableName + "_res", columns, false);
         writeFile(new File(JAVA_PATH + RES_PACKAGE.replace(".", "/"), toClass(tableName + "_res") + ".java"), content);
     }
@@ -481,7 +483,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
         List<String> javaList = Lists.newArrayList(javaImportSet);
         Collections.sort(javaList);
         String javaJoin = Joiner.on("").join(javaList);
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String modelClass = toClass(handleTableName) + MODEL_SUFFIX;
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, tableName, modelClass, sbd);
@@ -514,7 +516,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             "}\n";
     @SuppressWarnings("MalformedFormatString")
     private static void dao(String tableName, String tableComment) {
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
         String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
         String modelClassPath = tableToModel(handleTableName);
@@ -535,27 +537,31 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             }
         }
 
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
-        String content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n" +
-                String.format("<mapper namespace=\"%s\">\n", tableToDao(handleTableName)) +
-                (GENERATE_XML ? (xmlMap(handleTableName, false, columns) + "\n" +
-                        xmlMap(handleTableName, true, columns) + "\n" +
-                        "\n" +
-                        xmlSql(handleTableName, false, columns) + "\n" +
-                        xmlSql(handleTableName, true, columns) + "\n" +
-                        "\n" +
-                        xmlInsertOrUpdate(tableName, columns) + "\n" +
-                        "\n" +
-                        xmlBatchInsert(tableName, columns) + "\n" +
-                        "\n" +
-                        xmlBatchReplace(tableName, columns) + "\n" +
-                        "\n" +
-                        xmlBatchUpdate(tableName, columns, primaryColumn) + "\n" +
-                        ( hasLogicDelete ? ( "\n" + forceDelete(tableName, primaryColumn) + "\n" ) : "" )
-                ) : "") +
-                "</mapper>\n";
-        writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), content);
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
+        StringBuilder sbd = new StringBuilder();
+        sbd.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        sbd.append("<!DOCTYPE mapper PUBLIC \"-//mybatis.org//DTD Mapper 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-mapper.dtd\">\n");
+        sbd.append(String.format("<mapper namespace=\"%s\">\n", tableToDao(handleTableName)));
+        if (GENERATE_XML_RESULT_SQL) {
+            sbd.append(xmlMap(handleTableName, false, columns)).append("\n")
+                    .append(xmlMap(handleTableName, true, columns)).append("\n")
+                    .append("\n")
+                    .append(xmlSql(handleTableName, false, columns)).append("\n")
+                    .append(xmlSql(handleTableName, true, columns)).append("\n")
+                    .append("\n");
+        }
+        sbd.append(xmlInsertOrUpdate(tableName, columns)).append("\n")
+                .append("\n")
+                .append(xmlBatchInsert(tableName, columns)).append("\n")
+                .append("\n")
+                .append(xmlBatchReplace(tableName, columns)).append("\n")
+                .append("\n")
+                .append(xmlBatchUpdate(tableName, columns, primaryColumn)).append("\n");
+        if (hasLogicDelete) {
+            sbd.append("\n").append(forceDelete(tableName, primaryColumn)).append("\n");
+        }
+        sbd.append("</mapper>\n");
+        writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), sbd.toString());
     }
     private static String xmlMap(String tableName, boolean alias, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
@@ -603,7 +609,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
         return sbd.append(columnBuilder.toString().trim()).append("\n").append(tab(1)).append("</sql>").toString();
     }
     private static String xmlInsertOrUpdate(String tableName, List<Map<String, Object>> columns) {
-        String handleTableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         StringBuilder sbd = new StringBuilder();
         sbd.append(tab(1)).append("<insert id=\"insertOrUpdate\" parameterType=\"");
         sbd.append(tableToModel(handleTableName)).append("\"\n");
@@ -860,7 +866,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             "    }\n" +
             "}\n";
     private static void service(String tableName) {
-        tableName = tableName.toUpperCase().startsWith("T_") ? tableName.substring(2) : tableName;
+        tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(2) : tableName;
         String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + DAO_SUFFIX)
                 .replace("$$entity$$", toClass(tableName) + MODEL_SUFFIX);
         String content = String.format(serviceInfo,
