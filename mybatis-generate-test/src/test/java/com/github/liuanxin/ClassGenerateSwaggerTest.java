@@ -277,7 +277,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         }
         sbd.append("\n\n");
         sbd.append("| 序号 | 字段名 | 字段类型 | 是否可空 | 默认值 | 字段说明 |\n");
-        sbd.append("| :-- | :----- | :------ | :------ | :---- | :------ |\n");
+        sbd.append("| :--: | :---: | :-----: | :-----: | :---: | :-----: |\n");
         for (int i = 0; i < columns.size(); i++) {
             Map<String, Object> column = columns.get(i);
             String columnName = toStr(column.get(COLUMN_NAME));
@@ -501,8 +501,9 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
             }
             switch (fieldName) {
                 case "id":
-                    importSet.add("import com.baomidou.mybatisplus.annotation.TableId;\n");
-                    sbd.append(tab(1)).append("@TableId\n");
+                    // 使用数据库的 id 生成, 不用其默认的 雪花 id
+                    importSet.add("import com.baomidou.mybatisplus.annotation.IdType;\n");
+                    sbd.append(tab(1)).append("@TableId(type = IdType.AUTO)\n");
                     break;
                 case "createTime":
                     importSet.add("import com.baomidou.mybatisplus.annotation.FieldFill;\n");
