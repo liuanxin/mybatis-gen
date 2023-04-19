@@ -502,6 +502,7 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
             switch (fieldName) {
                 case "id":
                     // 使用数据库的 id 生成, 不用其默认的 雪花 id
+                    importSet.add("import com.baomidou.mybatisplus.annotation.TableId;\n");
                     importSet.add("import com.baomidou.mybatisplus.annotation.IdType;\n");
                     sbd.append(tab(1)).append("@TableId(type = IdType.AUTO)\n");
                     break;
