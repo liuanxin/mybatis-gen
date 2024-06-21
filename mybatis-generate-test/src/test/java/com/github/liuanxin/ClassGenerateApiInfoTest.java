@@ -69,7 +69,11 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
      *
      * 如果是用 MariaDB 且版本 <= 10.3.2 也同样使用 VALUES, 版本 >= 10.3.3 则使用 VALUE
      *   见: https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-     *   见: https://mariadb.com/kb/en/values-value/</pre>
+     *   见: https://mariadb.com/kb/en/values-value
+     *
+     * 如果要用大的记录可以用 greatest 函数, 如果要用小的记录可以用 least 函数, 或者用 if(condition, trueValue, falseValueOrNull):
+     * https://stackoverflow.com/questions/10354431/on-duplicate-key-update-with-a-condition
+     * </pre>
      */
     private static final int DUPLICATE_TYPE = 0;
 
