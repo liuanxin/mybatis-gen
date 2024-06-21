@@ -58,15 +58,23 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
     private static final String TABLE_PREFIX = "t_";
 
     /**
+     * <pre>
      * 0. 使用 VALUES, 1. 使用 new, 2. 使用 VALUE
      *
-     * INSERT INTO t_xx(c1, c2) VALUES('1', '2') ON DUPLICATE KEY UPDATE c1 = VALUES(c1), c2 = VALUES(c2)
-     * 使用 VALUES(c1) 表示使用新值, 8.0.20 之后 VALUES 不再推荐使用, 从 8.0.19 开始推荐下面的方式
-     * INSERT INTO t_xx(c1, c2) VALUES('1', '2') AS new ON DUPLICATE KEY UPDATE c1 = new.c1, c2 = new.c2
+     * 如果 c1 是主键, 原来有一条 (c1, c2) 为 (1, 2) 的数据
+     *
+     * 当执行完下面的语句后 (c1, c2) 的值将是 (1, 3)
+     *     INSERT INTO t_xx(c1, c2) VALUES('1', '3') ON DUPLICATE KEY UPDATE c2 = VALUES(c2)
+     *
+     * 如果用下面的语句 (c1, c2) 的值将是 (1, 2)
+     *     INSERT INTO t_xx(c1, c2) VALUES('1', '3') ON DUPLICATE KEY UPDATE c2 = t_xx.c2
+     *
+     * 8.0.20 之后 VALUES 不再推荐使用, 从 8.0.19 开始推荐下面的方式
+     *     INSERT INTO t_xx(c1, c2) VALUES('1', '2') AS new ON DUPLICATE KEY UPDATE c2 = new.c2
      *
      * 如果是用 MariaDB 且版本 <= 10.3.2 也同样使用 VALUES, 版本 >= 10.3.3 则使用 VALUE
-     * 见: https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
-     * 见: https://mariadb.com/kb/en/values-value/
+     *   见: https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+     *   见: https://mariadb.com/kb/en/values-value/</pre>
      */
     private static final int DUPLICATE_TYPE = 0;
 
@@ -461,13 +469,13 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
             "\n" +
             "/** %s */\n" +
             "@Data\n" +
-            "@TableName(\"%s\")\n" +
+//            "@TableName(\"%s\")\n" +
             "public class %s implements Serializable {\n" +
             "    private static final long serialVersionUID = 1L;\n" +
             "%s" +
             "}\n";
     private static void model(String tableName, String tableComment, List<Map<String, Object>> columns) {
-        Set<String> importSet = Sets.newHashSet("import com.baomidou.mybatisplus.annotation.TableName;\n", "import lombok.Data;\n");
+        Set<String> importSet = Sets.newHashSet("import lombok.Data;\n");
         Set<String> javaImportSet = Sets.newHashSet("import java.io.Serializable;\n");
         StringBuilder sbd = new StringBuilder();
         for (Map<String, Object> column : columns) {
@@ -540,9 +548,9 @@ public class ClassGenerateSwaggerTest extends AbstractTransactionalJUnit4SpringC
         Collections.sort(javaList);
         String javaJoin = Joiner.on("").join(javaList);
         String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
-        String modelClass = toClass(handleTableName) + MODEL_SUFFIX;
+        String modelClass = MODEL_PREFIX + toClass(handleTableName) + MODEL_SUFFIX;
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
-        String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, tableName, modelClass, sbd);
+        String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, /*tableName,*/ modelClass, sbd);
         writeFile(new File(JAVA_PATH + MODEL_PACKAGE.replace(".", "/"), modelClass + ".java"), content);
     }
 
