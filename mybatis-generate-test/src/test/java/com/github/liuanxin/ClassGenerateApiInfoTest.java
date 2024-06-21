@@ -47,10 +47,17 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
     private static final String DAO_PACKAGE = PROJECT_PACKAGE + ".repository";
     private static final String SERVICE_PACKAGE = PROJECT_PACKAGE + ".service";
 
-    private static final String MODEL_SUFFIX = "";
-    private static final String DAO_SUFFIX = "Mapper";
+    private static final String MODEL_PREFIX = "";
+    private static final String MODEL_SUFFIX = "Entity";
+
+    private static final String DAO_PREFIX = "";
+    private static final String DAO_SUFFIX = "Dao";
+
+    private static final String SERVICE_PREFIX = "";
     private static final String SERVICE_SUFFIX = "Service";
-    private static final String XML_SUFFIX = "";
+
+    private static final String XML_PREFIX = "";
+    private static final String XML_SUFFIX = "Mapper";
 
     /**
      * <pre>
@@ -496,7 +503,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
         Collections.sort(javaList);
         String javaJoin = Joiner.on("").join(javaList);
         String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
-        String modelClass = toClass(handleTableName) + MODEL_SUFFIX;
+        String modelClass = MODEL_PREFIX + toClass(handleTableName) + MODEL_SUFFIX;
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = String.format(MODEL, MODEL_PACKAGE, noJavaJoin, javaJoin, comment, tableName, modelClass, sbd);
         writeFile(new File(JAVA_PATH + MODEL_PACKAGE.replace(".", "/"), modelClass + ".java"), content);
@@ -529,8 +536,8 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
     @SuppressWarnings("MalformedFormatString")
     private static void dao(String tableName, String tableComment) {
         String handleTableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
-        String daoClassName = toClass(handleTableName) + DAO_SUFFIX;
-        String modelClassName = toClass(handleTableName) + MODEL_SUFFIX;
+        String daoClassName = DAO_PREFIX + toClass(handleTableName) + DAO_SUFFIX;
+        String modelClassName = MODEL_PREFIX + toClass(handleTableName) + MODEL_SUFFIX;
         String modelClassPath = tableToModel(handleTableName);
         String comment = (tableComment != null && !tableComment.isEmpty()) ? (tableComment + " --> " + tableName) : tableName;
         String content = GENERATE_XML
@@ -573,7 +580,7 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             sbd.append("\n").append(forceDelete(tableName, primaryColumn)).append("\n");
         }
         sbd.append("</mapper>\n");
-        writeFile(new File(XML_PATH, toClass(handleTableName) + XML_SUFFIX + ".xml"), sbd.toString());
+        writeFile(new File(XML_PATH, XML_PREFIX + toClass(handleTableName) + XML_SUFFIX + ".xml"), sbd.toString());
     }
     private static String xmlMap(String tableName, boolean alias, List<Map<String, Object>> columns) {
         StringBuilder sbd = new StringBuilder();
@@ -879,12 +886,12 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
             "}\n";
     private static void service(String tableName) {
         tableName = tableName.toLowerCase().startsWith(TABLE_PREFIX) ? tableName.substring(TABLE_PREFIX.length()) : tableName;
-        String serviceInfo = SERVICE.replace("$$var$$", toField(tableName) + DAO_SUFFIX)
-                .replace("$$entity$$", toClass(tableName) + MODEL_SUFFIX);
+        String serviceInfo = SERVICE.replace("$$var$$", DAO_PREFIX + toField(tableName) + DAO_SUFFIX)
+                .replace("$$entity$$", MODEL_PREFIX + toClass(tableName) + MODEL_SUFFIX);
         String content = String.format(serviceInfo,
                 SERVICE_PACKAGE, tableToDao(tableName), tableToModel(tableName),
-                toClass(tableName) + SERVICE_SUFFIX, toClass(tableName) + DAO_SUFFIX);
-        writeFile(new File(JAVA_PATH + SERVICE_PACKAGE.replace(".", "/"), toClass(tableName) + SERVICE_SUFFIX + ".java"), content);
+                SERVICE_PREFIX + toClass(tableName) + SERVICE_SUFFIX, DAO_PREFIX + toClass(tableName) + DAO_SUFFIX);
+        writeFile(new File(JAVA_PATH + SERVICE_PACKAGE.replace(".", "/"), SERVICE_PREFIX + toClass(tableName) + SERVICE_SUFFIX + ".java"), content);
     }
 
     private static String toColumn(String tableName, String columnName, boolean alias) {
@@ -919,11 +926,11 @@ public class ClassGenerateApiInfoTest extends AbstractTransactionalJUnit4SpringC
     }
 
     private static String tableToModel(String tableName) {
-        return MODEL_PACKAGE + "." + toClass(tableName) + MODEL_SUFFIX;
+        return MODEL_PACKAGE + "." + MODEL_PREFIX + toClass(tableName) + MODEL_SUFFIX;
     }
 
     private static String tableToDao(String tableName) {
-        return DAO_PACKAGE + "." + toClass(tableName) + DAO_SUFFIX;
+        return DAO_PACKAGE + "." + DAO_PREFIX + toClass(tableName) + DAO_SUFFIX;
     }
 
     private static String tab(int count) {
